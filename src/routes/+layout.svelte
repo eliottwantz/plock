@@ -1,5 +1,4 @@
 <script>
-	import { enhance } from '$app/forms';
 	import '../app.pcss';
 
 	let { data, children } = $props();

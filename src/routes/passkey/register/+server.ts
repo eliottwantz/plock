@@ -1,56 +1,47 @@
-// import { surreal } from '@/app/(api)/lib/surreal';
-// import { extractUserTokenFromRequest } from '@/app/(api)/lib/token';
-// import { record } from '@/lib/zod';
-// import { Challenge } from '@/schema/resources/challenge';
-// import { Credential } from '@/schema/resources/credential';
-// import { User } from '@/schema/resources/user';
-// import { server } from '@passwordless-id/webauthn';
-// import { NextRequest, NextResponse } from 'next/server';
-
 import { challengeTable, credentialTable } from '$lib/db/schema';
 import { env } from '$lib/env/server';
 import { db } from '$lib/server/db';
 import { server } from '@passwordless-id/webauthn';
-import { Type } from '@sinclair/typebox';
-import { Value } from '@sinclair/typebox/value';
 import { json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 
 export const POST = async ({ locals: { user }, request }) => {
 	if (!user) {
-		return json({ success: false, error: 'not_authenticated' }, { status: 403 });
+		return json({ error: 'not_authenticated' }, { status: 403 });
 	}
 
-	const Body = Type.Object({
-		challengeId: Type.String(),
-		passkeyname: Type.String(),
-		registration: Type.Object({
-			username: Type.Literal(user.email),
-			credential: Type.Object({
-				id: Type.String(),
-				publicKey: Type.String(),
-				algorithm: Type.Union([Type.Literal('RS256'), Type.Literal('ES256')])
+	const Body = z.object({
+		challengeId: z.string(),
+		passkeyname: z.string(),
+		registration: z.object({
+			username: z.literal(user.email),
+			credential: z.object({
+				id: z.string(),
+				publicKey: z.string(),
+				algorithm: z.union([z.literal('RS256'), z.literal('ES256')])
 			}),
-			authenticatorData: Type.String(),
-			clientData: Type.String()
+			authenticatorData: z.string(),
+			clientData: z.string()
 		})
 	});
 
 	try {
 		const body = await request.json();
-		if (!Value.Check(Body, body)) {
-			return json({ success: false, error: 'invalid_body' }, { status: 400 });
+		const parsed = Body.safeParse(body);
+		if (!parsed.success) {
+			return json({ error: 'invalid_body' }, { status: 400 });
 		}
 
-		console.log('Body: ', body);
-		const { challengeId, registration } = body;
+		console.log('Body: ', parsed);
+		const { challengeId, registration, passkeyname } = parsed.data;
 		// TODO: check for 5min max age
 		const challenge = await db.query.challengeTable.findFirst({
 			where: (table, { and, eq, lte }) => and(eq(table.id, challengeId), eq(table.userId, user.id))
 		});
 
 		if (!challenge) {
-			return json({ success: false, error: 'invalid_challenge' }, { status: 400 });
+			return json({ error: 'invalid_challenge' }, { status: 400 });
 		}
 
 		// Remove the challenge from the database because it is used
@@ -75,7 +66,7 @@ export const POST = async ({ locals: { user }, request }) => {
 			});
 
 		if (!registrationParsed) {
-			return json({ success: false, error: 'invalid_credential' }, { status: 400 });
+			return json({ error: 'invalid_credential' }, { status: 400 });
 		}
 
 		const credential = await db
@@ -83,7 +74,7 @@ export const POST = async ({ locals: { user }, request }) => {
 			.values({
 				id: registrationParsed.credential.id,
 				userId: user.id,
-				name: body.passkeyname,
+				name: passkeyname,
 				publicKey: registrationParsed.credential.publicKey,
 				algorithm: registrationParsed.credential.algorithm
 			})
@@ -92,15 +83,14 @@ export const POST = async ({ locals: { user }, request }) => {
 			.then((res) => res.at(0));
 
 		if (!credential) {
-			return json({ success: false, error: 'credential_not_stored' }, { status: 400 });
+			return json({ error: 'credential_not_stored' }, { status: 400 });
 		}
 
 		return json({
-			success: true,
 			id: credential.id,
 			name: credential.name
 		});
 	} catch (e) {
-		return json({ success: false, error: 'invalid_body' }, { status: 400 });
+		return json({ error: 'invalid_body' }, { status: 400 });
 	}
 };

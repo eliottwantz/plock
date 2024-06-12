@@ -1,10 +1,12 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { ChallengeResponse, RegistrationResponse } from '$lib/schemas';
+	import {
+		ChallengeResponseSchema,
+		ErrorResponseSchema,
+		RegistrationResponseSchema
+	} from '$lib/schemas';
 	import { client } from '@passwordless-id/webauthn';
-	import { Errors } from '@sinclair/typebox/errors';
-	import { Check } from '@sinclair/typebox/value';
 
 	let { data } = $props();
 	let error = $state<string | undefined>();
@@ -16,20 +18,23 @@
 
 		try {
 			const res = await fetch('/passkey/challenge');
-			const challengeBody = await res.json();
-			if (!Check(ChallengeResponse, challengeBody)) {
-				console.log(Errors(ChallengeResponse, challengeBody));
-				error = 'Failed to authenticate: no challenge';
+			const resBody = await res.json();
+			if (!res.ok) {
+				const data = ErrorResponseSchema.parse(resBody);
+				error = `${res.status} Failed to authenticate: ${data.error}`;
 				return;
 			}
 
-			if (!challengeBody.success) {
-				error = `Failed to authenticate: ${challengeBody.error}`;
+			console.log(resBody);
+
+			const parsedResponse = ChallengeResponseSchema.safeParse(resBody);
+			if (!parsedResponse.success) {
+				error = `Failed to authenticate: ${parsedResponse.error}`;
 				return;
 			}
 
 			const registration = await client
-				.register(data.user.email, challengeBody.challenge, {
+				.register(data.user.email, parsedResponse.data.challenge, {
 					authenticatorType: 'both',
 					userHandle: crypto.getRandomValues(new Uint8Array(32)).toString().slice(64)
 				})
@@ -44,7 +49,7 @@
 			const registerResponse = await fetch('/passkey/register', {
 				method: 'POST',
 				body: JSON.stringify({
-					challengeId: challengeBody.id,
+					challengeId: parsedResponse.data.id,
 					registration,
 					passkeyname
 				}),
@@ -53,14 +58,16 @@
 				}
 			});
 			const registerBody = await registerResponse.json();
-			if (!Check(RegistrationResponse, registerBody)) {
-				console.log(Errors(RegistrationResponse, registerBody));
-				error = 'Failed to authenticate: invalid request';
+			if (!registerResponse.ok) {
+				const data = ErrorResponseSchema.parse(registerBody);
+				error = `Failed to authenticate: ${data.error}`;
 				return;
 			}
-			if (!registerBody.success) {
-				console.log(Errors(RegistrationResponse, registerBody));
-				error = `Failed to authenticate: ${registerBody.error}`;
+
+			const parseRegisterResponse = RegistrationResponseSchema.safeParse(registerBody);
+			if (!parseRegisterResponse.success) {
+				console.log(parseRegisterResponse.error.issues);
+				error = `Failed to authenticate: ${parseRegisterResponse.error.flatten()}`;
 				return;
 			}
 

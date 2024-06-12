@@ -3,36 +3,36 @@ import { env } from '$lib/env/server';
 import { lucia } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { server } from '@passwordless-id/webauthn';
-import { Type } from '@sinclair/typebox';
-import { Check } from '@sinclair/typebox/value';
 import { json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
+import { z } from 'zod';
 
 export const POST = async ({ request, url, cookies, getClientAddress }) => {
-	const Body = Type.Object({
-		challengeId: Type.String(),
-		authentication: Type.Object({
-			credentialId: Type.String(),
-			authenticatorData: Type.String(),
-			clientData: Type.String(),
-			signature: Type.String()
+	const Body = z.object({
+		challengeId: z.string(),
+		authentication: z.object({
+			credentialId: z.string(),
+			authenticatorData: z.string(),
+			clientData: z.string(),
+			signature: z.string()
 		})
 	});
 
 	const body = await request.json();
+	const parsed = Body.safeParse(body);
 	console.log('Body: ', body);
-	if (!Check(Body, body)) {
-		return json({ success: false, error: 'invalid_body' }, { status: 400 });
+	if (!parsed.success) {
+		return json({ error: 'invalid_body' }, { status: 400 });
 	}
 
-	const { challengeId, authentication } = body;
+	const { challengeId, authentication } = parsed.data;
 	// TODO: check for 5min max age
 	const challenge = await db.query.challengeTable.findFirst({
 		where: (table, { and, eq }) => and(eq(table.id, challengeId))
 	});
 
 	if (!challenge) {
-		return json({ success: false, error: 'invalid_challenge' }, { status: 400 });
+		return json({ error: 'invalid_challenge' }, { status: 400 });
 	}
 
 	// Remove the challenge from the database because it is used
@@ -49,7 +49,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 	});
 
 	if (!credential) {
-		return json({ success: false, error: 'invalid_credential' }, { status: 400 });
+		return json({ error: 'invalid_credential' }, { status: 400 });
 	}
 
 	const expected = {
@@ -75,7 +75,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 		});
 
 	if (!authenticationParsed) {
-		return json({ success: false, error: 'authentication_failed' }, { status: 400 });
+		return json({ error: 'authentication_failed' }, { status: 400 });
 	}
 
 	const user = await db.query.userTable.findFirst({
@@ -83,7 +83,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 	});
 
 	if (!user) {
-		return json({ success: false, error: 'unknown_user' }, { status: 400 });
+		return json({ error: 'unknown_user' }, { status: 400 });
 	}
 
 	const session = await lucia.createSession(credential.userId, {
@@ -99,7 +99,6 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 	});
 
 	return json({
-		success: true,
 		name: credential.name
 	});
 };

@@ -1,9 +1,11 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
-	import { AuthenticationResponse, ChallengeResponse } from '$lib/schemas';
+	import {
+		AuthenticationResponseSchema,
+		ChallengeResponseSchema,
+		ErrorResponseSchema
+	} from '$lib/schemas';
 	import { client } from '@passwordless-id/webauthn';
-	import { Errors } from '@sinclair/typebox/errors';
-	import { Check } from '@sinclair/typebox/value';
 
 	let error = $state<string | undefined>();
 	let didPoke = $state<boolean>(false);
@@ -12,22 +14,25 @@
 		try {
 			const challengeResponse = await fetch('/passkey/challenge');
 			const challengeBody = await challengeResponse.json();
-			if (!Check(ChallengeResponse, challengeBody)) {
-				console.log(Errors(ChallengeResponse, challengeBody));
-				error = 'Failed to get challenge for passkey creation';
+			if (!challengeResponse.ok) {
+				const data = ErrorResponseSchema.parse(challengeBody);
+				error = `Failed to get challenge for passkey creation. ${data.error}`;
 				return;
 			}
 
-			if (!challengeBody.success) {
-				error = `Failed to create credential: ${challengeBody.error}`;
+			const parseChallengeResponse = ChallengeResponseSchema.safeParse(challengeBody);
+			if (!parseChallengeResponse.success) {
+				error = `Failed to create credential: ${parseChallengeResponse.error}`;
 				return;
 			}
 
-			const authentication = await client.authenticate([], challengeBody.challenge).catch((e) => {
-				console.log('Error authenticating passkey from browser', e);
-				error = 'Failed to authenticate credential';
-				return null;
-			});
+			const authentication = await client
+				.authenticate([], parseChallengeResponse.data.challenge)
+				.catch((e) => {
+					console.log('Error authenticating passkey from browser', e);
+					error = 'Failed to authenticate credential';
+					return null;
+				});
 
 			didPoke = true;
 			if (!authentication) return null;
@@ -35,7 +40,7 @@
 			const authenticationResponse = await fetch('/passkey/authenticate', {
 				method: 'POST',
 				body: JSON.stringify({
-					challengeId: challengeBody.id,
+					challengeId: parseChallengeResponse.data.id,
 					authentication
 				}),
 				headers: {
@@ -43,15 +48,18 @@
 				}
 			});
 			const authenticationBody = await authenticationResponse.json();
-			if (!Check(AuthenticationResponse, authenticationBody)) {
-				console.log(Errors(AuthenticationResponse, authenticationBody));
+			if (!authenticationResponse.ok) {
+				const data = ErrorResponseSchema.parse(authenticationBody);
+				console.log(data.error);
 				error = 'Failed to authenticate with passkey';
 				return;
 			}
 
-			if (!authenticationBody.success) {
-				console.log('Failed to authenticate', authenticationBody.error);
-				error = `Failed to create credential: ${authenticationBody.error}`;
+			const parsedAuthenticationResponse =
+				AuthenticationResponseSchema.safeParse(authenticationBody);
+			if (!parsedAuthenticationResponse.success) {
+				console.log('Failed to authenticate', parsedAuthenticationResponse.error);
+				error = `Failed to create credential: ${parsedAuthenticationResponse.error}`;
 				return;
 			}
 

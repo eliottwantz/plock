@@ -17,10 +17,9 @@ export const GET = async ({ locals: { user } }) => {
 		.then((res) => res.at(0));
 
 	if (!challenge) {
-		return json({ success: false, error: 'unknown_error' }, { status: 400 });
+		return json({ error: 'unknown_error' }, { status: 400 });
 	} else {
 		return json({
-			success: true,
 			id: challenge.id,
 			challenge: challenge.challenge
 		});
