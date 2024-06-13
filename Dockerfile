@@ -23,5 +23,6 @@ USER node
 
 EXPOSE 5173
 ENV PORT=5173
+ENV ORIGIN="http://localhost:5173"
 
 CMD [ "node", "-r", "dotenv/config", "./build/index.js" ]

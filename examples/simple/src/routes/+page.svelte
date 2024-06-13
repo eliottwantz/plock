@@ -4,9 +4,9 @@
 	let { data } = $props();
 </script>
 
-<a href="{env.PUBLIC_AUTH_URL}/login">Login</a>
-<a href="{env.PUBLIC_AUTH_URL}/passkey">Account</a>
-<a href="{env.PUBLIC_AUTH_URL}/logout">Logout</a>
+<a href="{env.PUBLIC_AUTH_ORIGIN}/login">Login</a>
+<a href="{env.PUBLIC_AUTH_ORIGIN}/passkey">Account</a>
+<a href="{env.PUBLIC_AUTH_ORIGIN}/logout">Logout</a>
 
 <div>
 	<pre>

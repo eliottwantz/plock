@@ -6,8 +6,6 @@ import { sequence } from '@sveltejs/kit/hooks';
 const auth: Handle = async ({ event, resolve }) => {
 	console.log('###### In HOOK #######');
 
-	console.log('env', env);
-
 	const sessionId = event.cookies.get(lucia.sessionCookieName);
 	if (!sessionId) {
 		event.locals.user = null;

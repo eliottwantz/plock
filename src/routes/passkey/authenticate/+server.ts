@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public';
 import { challengeTable } from '$lib/db/schema';
 import { lucia } from '$lib/server/auth';
 import { db } from '$lib/server/db';
@@ -19,7 +20,6 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 
 	const body = await request.json();
 	const parsed = Body.safeParse(body);
-	console.log('Body: ', body);
 	if (!parsed.success) {
 		return json({ error: 'invalid_body' }, { status: 400 });
 	}
@@ -53,8 +53,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 
 	const expected = {
 		challenge: challenge.challenge,
-		origin: url.origin,
-		// origin: env.ORIGIN ?? url.origin,
+		origin: env.PUBLIC_AUTH_ORIGIN ?? url.origin,
 		userVerified: true,
 		counter: -1
 	};

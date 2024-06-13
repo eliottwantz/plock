@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public';
 import { challengeTable, credentialTable } from '$lib/db/schema';
 import { db } from '$lib/server/db';
 import { server } from '@passwordless-id/webauthn';
@@ -54,8 +55,7 @@ export const POST = async ({ locals: { user }, request, url }) => {
 
 		const expected = {
 			challenge: challenge.challenge,
-			origin: url.origin
-			// origin: env.ORIGIN
+			origin: env.PUBLIC_AUTH_ORIGIN ?? url.origin
 		};
 
 		const registrationParsed = await server
