@@ -1,12 +1,11 @@
 import { challengeTable, credentialTable } from '$lib/db/schema';
-import { env } from '$lib/env/server';
 import { db } from '$lib/server/db';
 import { server } from '@passwordless-id/webauthn';
 import { json } from '@sveltejs/kit';
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
-export const POST = async ({ locals: { user }, request }) => {
+export const POST = async ({ locals: { user }, request, url }) => {
 	if (!user) {
 		return json({ error: 'not_authenticated' }, { status: 403 });
 	}
@@ -55,7 +54,8 @@ export const POST = async ({ locals: { user }, request }) => {
 
 		const expected = {
 			challenge: challenge.challenge,
-			origin: env.ORIGIN
+			origin: url.origin
+			// origin: env.ORIGIN
 		};
 
 		const registrationParsed = await server

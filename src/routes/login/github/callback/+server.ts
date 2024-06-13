@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/public';
 import { github, handleLogin } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 import { OAuth2RequestError } from 'arctic';
@@ -76,7 +77,8 @@ export const GET = async (event) => {
 		}
 	}
 
-	return redirect(302, '/');
+	console.log('Redirecting to', env.PUBLIC_CALLBACK_URL);
+	return redirect(302, env.PUBLIC_CALLBACK_URL);
 };
 
 type GitHubUserResult = {

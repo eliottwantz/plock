@@ -1,4 +1,4 @@
-import { env } from '$lib/env/server';
+import { env } from '$env/dynamic/private';
 import { google } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 import { generateCodeVerifier, generateState } from 'arctic';

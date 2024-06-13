@@ -1,5 +1,4 @@
 import { challengeTable } from '$lib/db/schema';
-import { env } from '$lib/env/server';
 import { lucia } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { server } from '@passwordless-id/webauthn';
@@ -54,7 +53,8 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 
 	const expected = {
 		challenge: challenge.challenge,
-		origin: env.ORIGIN ?? url.origin,
+		origin: url.origin,
+		// origin: env.ORIGIN ?? url.origin,
 		userVerified: true,
 		counter: -1
 	};

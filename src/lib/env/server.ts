@@ -15,4 +15,4 @@ const envSchema = z.object({
 	ORIGIN: z.string().min(1)
 });
 
-export const env = mustValidateEnv(envSchema, serverEnv);
+// export const env = mustValidateEnv(envSchema, serverEnv);

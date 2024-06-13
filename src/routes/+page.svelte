@@ -2,7 +2,7 @@
 	let { data } = $props();
 </script>
 
-<h1 class="text-3xl font-semibold mb-4">Hello {data.user && data.user.name}!</h1>
+<h1 class="mb-4 text-3xl font-semibold">Hello {data.user && data.user.name}!</h1>
 
 {#if data.user}
 	<div class="flex items-center gap-4">

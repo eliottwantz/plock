@@ -1,9 +1,13 @@
+import { env } from '$env/dynamic/public';
 import { lucia } from '$lib/server/auth';
-import type { Handle } from '@sveltejs/kit';
+import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 
 const auth: Handle = async ({ event, resolve }) => {
 	console.log('###### In HOOK #######');
+
+	console.log('env', env);
+
 	const sessionId = event.cookies.get(lucia.sessionCookieName);
 	if (!sessionId) {
 		event.locals.user = null;
@@ -28,6 +32,11 @@ const auth: Handle = async ({ event, resolve }) => {
 	}
 	event.locals.user = user;
 	event.locals.session = session;
+
+	if (session && event.url.pathname.includes('login')) {
+		return redirect(302, env.PUBLIC_CALLBACK_URL);
+	}
+
 	return resolve(event);
 };
 

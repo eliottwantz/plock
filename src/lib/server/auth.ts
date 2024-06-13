@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/private';
 import {
 	accountTable,
 	authProviderEnum,
@@ -7,7 +8,6 @@ import {
 	userTable,
 	type User
 } from '$lib/db/schema';
-import { env } from '$lib/env/server';
 import { db } from '$lib/server/db';
 import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
 import { createId } from '@paralleldrive/cuid2';
@@ -46,11 +46,11 @@ const databaseSessionAttributes = sessionSchema.omit({
 	expiresAt: true
 });
 
-export const github = new GitHub(env.GITHUB_CLIENT_ID, env.GITHUB_CLIENT_SECRET);
+export const github = new GitHub(env.GITHUB_CLIENT_ID!, env.GITHUB_CLIENT_SECRET!);
 export const google = new Google(
-	env.GOOGLE_CLIENT_ID,
-	env.GOOGLE_CLIENT_SECRET,
-	env.GOOGLE_AUTH_CALLBACK_URL
+	env.GOOGLE_CLIENT_ID!,
+	env.GOOGLE_CLIENT_SECRET!,
+	env.GOOGLE_AUTH_CALLBACK_URL!
 );
 
 export type LoginInfo = {
