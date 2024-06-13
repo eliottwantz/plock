@@ -1,6 +1,7 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
+	import { env } from '$env/dynamic/public';
 	import {
 		ChallengeResponseSchema,
 		ErrorResponseSchema,
@@ -82,7 +83,7 @@
 	};
 </script>
 
-<h1 class="mb-4 text-3xl font-semibold">Passkey</h1>
+<h1 class="mb-10 text-center text-3xl font-semibold">Passkey</h1>
 
 {#if data.passkeys.length}
 	<ul class="mb-6 flex flex-col gap-y-4">
@@ -125,3 +126,9 @@
 		>
 	</div>
 </div>
+
+<h2 class="mt-10 w-full text-center">
+	Go back to <a class="underline underline-offset-2" href={env.PUBLIC_CALLBACK_URL}
+		>{env.PUBLIC_SITE_NAME}</a
+	>
+</h2>

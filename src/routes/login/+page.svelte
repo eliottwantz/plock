@@ -64,8 +64,7 @@
 				return;
 			}
 
-			await goto(env.PUBLIC_CALLBACK_URL);
-			await invalidateAll();
+			window.location.href = env.PUBLIC_CALLBACK_URL;
 		} catch (e) {
 			console.log(e);
 			error = 'Failed to authenticate with passkey';
