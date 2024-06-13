@@ -1,3 +1,4 @@
+import { env } from '$lib/env/client';
 import { lucia } from '$lib/server/auth';
 import { fail, redirect } from '@sveltejs/kit';
 
@@ -12,6 +13,6 @@ export const actions = {
 			path: '.',
 			...sessionCookie.attributes
 		});
-		redirect(302, '/');
+		redirect(302, env.PUBLIC_LOGOUT_URL);
 	}
 };

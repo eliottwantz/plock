@@ -1,5 +1,6 @@
 <script lang="ts">
 	import { goto, invalidateAll } from '$app/navigation';
+	import { env } from '$lib/env/client';
 	import {
 		AuthenticationResponseSchema,
 		ChallengeResponseSchema,
@@ -63,7 +64,7 @@
 				return;
 			}
 
-			await goto('/');
+			await goto(env.PUBLIC_CALLBACK_URL);
 			await invalidateAll();
 		} catch (e) {
 			console.log(e);

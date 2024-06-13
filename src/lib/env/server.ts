@@ -12,9 +12,6 @@ const envSchema = z.object({
 	GOOGLE_AUTH_CALLBACK_URL: z.string().min(1),
 	GITHUB_CLIENT_ID: z.string().min(1),
 	GITHUB_CLIENT_SECRET: z.string().min(1),
-	POST_CALLBACK_URL: z.string().min(1),
-	POST_CALLBACK_ERROR_URL: z.string().min(1),
-	POST_LOGOUT_URL: z.string().min(1),
 	ORIGIN: z.string().min(1)
 });
 

@@ -1,0 +1,15 @@
+.DS_Store
+node_modules
+/build
+/.svelte-kit
+/package
+vite.config.js.timestamp-*
+vite.config.ts.timestamp-*
+turso.db*
+.dockerignore
+Dockerfile
+README.md
+.gitignore
+.prettierrc
+.prettierignore
+examples

@@ -1,5 +1,5 @@
 services:
-  db:
+  postgres:
     image: postgres:16-alpine
     environment:
       POSTGRES_USER: postgres
@@ -10,6 +10,16 @@ services:
     ports:
       - '5432:5432'
     restart: unless-stopped
+
+  ploc:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: ploc:latest
+    ports:
+      - 5173:5173
+    env_file:
+      - .env
 
 volumes:
   postgres-data:
