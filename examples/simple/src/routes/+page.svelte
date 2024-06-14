@@ -1,15 +1,16 @@
 <script lang="ts">
-	import { env } from '$env/dynamic/public';
-
 	let { data } = $props();
 </script>
 
-<a href="{env.PUBLIC_AUTH_ORIGIN}/login">Login</a>
-<a href="{env.PUBLIC_AUTH_ORIGIN}/passkey">Account</a>
-<a href="{env.PUBLIC_AUTH_ORIGIN}/logout">Logout</a>
+<h1 class="text-3xl font-semibold mb-4">Hello {data.user && data.user.name}!</h1>
 
-<div>
-	<pre>
-        {JSON.stringify(data.cookies, null, 2)}
-    </pre>
-</div>
+{#if data.user}
+	<div class="flex items-center gap-4">
+		<img src={data.user.picture} alt="profile" width="50" height="50" />
+		<div>
+			<p>{data.user.id}</p>
+			<p>{data.user.email}</p>
+		</div>
+	</div>
+	<small>Created at: {new Date(data.user.createdAt).toLocaleString()}</small>
+{/if}
