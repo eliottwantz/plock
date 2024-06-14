@@ -1,6 +1,6 @@
 <script>
 	import { env } from '$env/dynamic/public';
-	import '../app.pcss';
+	import '../app.css';
 
 	let { data, children } = $props();
 </script>
