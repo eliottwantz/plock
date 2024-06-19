@@ -11,12 +11,21 @@ COPY . .
 ENV TURSO_URL="http://localhost:8081"
 RUN bun --bun run build
 
-FROM node:lts-alpine
+FROM oven/bun:latest as deps-prod
+
+WORKDIR /usr/src/app
+
+COPY bun.lockb package.json ./
+
+RUN bun install --production
+
+FROM node:lts-bookworm-slim
+# FROM gcr.io/distroless/nodejs22-debian12
 
 WORKDIR /usr/src/app
 
 COPY --from=build /usr/src/app/package.json .
-COPY --from=build /usr/src/app/node_modules ./node_modules
+COPY --from=deps-prod /usr/src/app/node_modules ./node_modules
 COPY --from=build /usr/src/app/build ./build
 
 USER node
