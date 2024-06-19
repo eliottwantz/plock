@@ -102,12 +102,14 @@
 </script>
 
 <div class="mb-10 flex items-center justify-center gap-x-4">
-	<span>
-		<Passkey class="h-8 w-8" />
-	</span>
-	<h1 class="text-3xl font-semibold">Passkey</h1>
+	<h1 class="scroll-m-20 text-4xl font-semibold tracking-tight lg:text-5xl">Account</h1>
 </div>
 
+<h2
+	class="mb-4 scroll-m-20 border-b pb-3 text-3xl font-semibold tracking-tight transition-colors first:mt-0"
+>
+	Passkeys
+</h2>
 <p>
 	Passkeys are webauthn credentials that validate your identity using touch, facial recognition, a
 	device password, or a PIN. They can be used as a password replacement or as a 2FA method. <Button
