@@ -1,12 +1,10 @@
 import { db } from '$lib/db/db';
 import { sessionTable, userTable } from '$lib/db/schema';
-import { redirect, type Handle } from '@sveltejs/kit';
+import type { Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
 import { eq } from 'drizzle-orm';
 
 const auth: Handle = async ({ event, resolve }) => {
-	console.log('###### In HOOK #######');
-
 	const sessionId = event.cookies.get('auth_session');
 	if (!sessionId) {
 		event.locals.user = null;
