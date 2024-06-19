@@ -2,6 +2,9 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
+	import { Button } from '$lib/components/ui/button';
+	import { Input } from '$lib/components/ui/input';
+	import { Label } from '$lib/components/ui/label';
 	import {
 		ChallengeResponseSchema,
 		ErrorResponseSchema,
@@ -105,26 +108,16 @@
 	</ul>
 {/if}
 
-<h2 class="text-xl font-semibold">Add a passkey</h2>
-
 {#if error}
 	<p class="text-red-500">{error}</p>
 {/if}
 
-<div>
-	<p>Give a name to differentiate this passkey</p>
-	<div class="flex items-center gap-x-3">
-		<input
-			class="bg-neutral-100 px-3 py-1"
-			placeholder="John's MacBook"
-			type="text"
-			bind:value={passkeyname}
-		/>
-		<button
-			class="rounded-md px-4 py-2 outline outline-1 outline-neutral-800"
-			onclick={registerPasskey}>Add passkey</button
-		>
+<div class="mt-4 flex flex-col gap-y-4">
+	<div class="flex flex-col gap-y-3">
+		<Label for="passkeyname">Give a name to differentiate this passkey</Label>
+		<Input id="passkeyname" bind:value={passkeyname} type="text" placeholder="John's MacBook" />
 	</div>
+	<Button onclick={registerPasskey}>Add passkey</Button>
 </div>
 
 <h2 class="mt-10 w-full text-center">

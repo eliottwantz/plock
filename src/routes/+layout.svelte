@@ -1,10 +1,12 @@
 <script>
-	import '../app.pcss';
+	import { ModeWatcher } from 'mode-watcher';
+	import '../app.css';
 
-	let { data, children } = $props();
+	let { children } = $props();
 </script>
 
-<div class="flex h-dvh items-center justify-center bg-neutral-800">
+<ModeWatcher />
+<div class="flex h-dvh items-center justify-center">
 	<main class="w-full max-w-md">
 		{@render children()}
 	</main>
