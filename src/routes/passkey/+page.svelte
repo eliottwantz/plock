@@ -2,30 +2,43 @@
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
 	import { env } from '$env/dynamic/public';
-	import { Button } from '$lib/components/ui/button';
+	import Passkey from '$lib/components/icons/Passkey.svelte';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import { LucideTrash } from 'lucide-svelte';
+	import * as Dialog from '$lib/components/ui/dialog';
+	import * as Tooltip from '$lib/components/ui/tooltip';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import {
 		ChallengeResponseSchema,
 		ErrorResponseSchema,
 		RegistrationResponseSchema
 	} from '$lib/schemas';
 	import { client } from '@passwordless-id/webauthn';
+	import { Badge } from '$lib/components/ui/badge';
 
 	let { data } = $props();
 	let error = $state<string | undefined>();
+	let modalError = $state<string | undefined>();
 	let passkeyname = $state('');
 	let isLoadingChallenge = $state(false);
+	let isProcessingRegistration = $state(false);
+	let dialogOpen = $state(false);
+	let deleteDialogOpen = $state(false);
+	let passkeyIdForDeletion = $state<string | undefined>();
 
 	const registerPasskey = async () => {
+		console.log('passkeyname', passkeyname);
 		if (isLoadingChallenge) return;
 
+		isProcessingRegistration = true;
 		try {
 			const res = await fetch('/passkey/challenge');
 			const resBody = await res.json();
 			if (!res.ok) {
 				const data = ErrorResponseSchema.parse(resBody);
-				error = `${res.status} Failed to authenticate: ${data.error}`;
+				modalError = `${res.status} Failed to authenticate: ${data.error}`;
 				return;
 			}
 
@@ -33,7 +46,7 @@
 
 			const parsedResponse = ChallengeResponseSchema.safeParse(resBody);
 			if (!parsedResponse.success) {
-				error = `Failed to authenticate: ${parsedResponse.error}`;
+				modalError = `Failed to authenticate: ${parsedResponse.error}`;
 				return;
 			}
 
@@ -44,7 +57,7 @@
 				})
 				.catch((e) => {
 					console.log('Error creating registration for passkey from browser', e);
-					error = 'Failed to authenticate: invalid request';
+					modalError = 'Failed to authenticate: invalid request';
 					return null;
 				});
 
@@ -64,64 +77,162 @@
 			const registerBody = await registerResponse.json();
 			if (!registerResponse.ok) {
 				const data = ErrorResponseSchema.parse(registerBody);
-				error = `Failed to authenticate: ${data.error}`;
+				modalError = `Failed to authenticate: ${data.error}`;
 				return;
 			}
 
 			const parseRegisterResponse = RegistrationResponseSchema.safeParse(registerBody);
 			if (!parseRegisterResponse.success) {
 				console.log(parseRegisterResponse.error.issues);
-				error = `Failed to authenticate: ${parseRegisterResponse.error.flatten()}`;
+				modalError = `Failed to authenticate: ${parseRegisterResponse.error.flatten()}`;
 				return;
 			}
 
 			console.log({ credentialId: registerBody.id, name: registerBody.name, registration });
+			dialogOpen = false;
 			await invalidateAll();
 		} catch (e) {
 			console.log(e);
-			error = 'Failed to authenticate: unknown reason';
+			modalError = 'Failed to authenticate: unknown reason';
 		} finally {
 			isLoadingChallenge = false;
+			isProcessingRegistration = false;
 		}
 	};
 </script>
 
-<h1 class="mb-10 text-center text-3xl font-semibold">Passkey</h1>
+<div class="mb-10 flex items-center justify-center gap-x-4">
+	<span>
+		<Passkey class="h-8 w-8" />
+	</span>
+	<h1 class="text-3xl font-semibold">Passkey</h1>
+</div>
 
-{#if data.passkeys.length}
-	<ul class="mb-6 flex flex-col gap-y-4">
-		{#each data.passkeys as passkeys}
-			<li class="flex flex-col">
-				<div class="flex items-center gap-x-3">
-					<span>{passkeys.name}</span>
-					<form action="?/delete" method="post" use:enhance>
-						<input type="hidden" name="id" value={passkeys.id} />
-						<button class="flex items-center gap-x-1">
-							<div class="text-red-500">X</div>
-							<span>Delete</span>
-						</button>
-					</form>
-				</div>
-				<small>Created at: {new Date(passkeys.createdAt).toLocaleString()}</small>
-			</li>
-		{/each}
-	</ul>
-{/if}
+<p>
+	Passkeys are webauthn credentials that validate your identity using touch, facial recognition, a
+	device password, or a PIN. They can be used as a password replacement or as a 2FA method. <Button
+		variant="link"
+		size="sm"
+		class="text-blue-700 dark:text-blue-500/80"
+		href="https://developers.google.com/identity/passkeys"
+		target="_blank"
+	>
+		Learn more about passkeys.
+	</Button>
+</p>
+
+<div class="my-4 overflow-hidden rounded-lg border-2">
+	<div class="flex w-full items-center border-b-2 bg-foreground/10 px-6 py-4">
+		<p>Your passkeys ({data?.passkeys?.length || 0})</p>
+		<div id="passkey-menu-spacer" class="flex-1"></div>
+		<Button
+			disabled={isLoadingChallenge || isProcessingRegistration}
+			onclick={() => (dialogOpen = true)}
+		>
+			Add a new passkey
+		</Button>
+		<Dialog.Root bind:open={dialogOpen}>
+			<Dialog.Trigger />
+			<Dialog.Content>
+				<Dialog.Header>
+					<Dialog.Title>Add a new passkey</Dialog.Title>
+					<Dialog.Description>
+						This will add a new passkey to your account. You can then use it to login afterwards.
+					</Dialog.Description>
+				</Dialog.Header>
+				<form
+					onsubmit={async (e) => {
+						e.preventDefault();
+						await registerPasskey();
+					}}
+					class="mb-4 flex flex-col gap-y-2"
+				>
+					{#if modalError}
+						<p class=" text-red-500">{modalError}</p>
+					{/if}
+					<div class="flex flex-col gap-y-3">
+						<Label for="passkeyname">Give a name to differentiate this passkey</Label>
+						<Input
+							id="passkeyname"
+							bind:value={passkeyname}
+							type="text"
+							autocomplete="off"
+							placeholder="John's MacBook"
+						/>
+					</div>
+					<div class="mt-4 flex justify-end gap-x-2">
+						<Button
+							type="submit"
+							disabled={isLoadingChallenge || isProcessingRegistration}
+							class="flex items-center gap-x-1"
+						>
+							<Passkey class="h-6 w-6" />
+							<span>Add passkey</span>
+						</Button>
+					</div>
+				</form>
+			</Dialog.Content>
+		</Dialog.Root>
+	</div>
+	{#if data.passkeys.length}
+		<ul class="flex flex-col">
+			{#each data.passkeys as passkey}
+				<li class="flex items-center justify-between border-b-2 px-6 py-4 last:border-0">
+					<div class="flex flex-col gap-y-1">
+						<div class="flex items-center gap-x-3">
+							<Passkey class="h-7 w-7" />
+							<Badge class="w-min" variant="default">{passkey.name}</Badge>
+						</div>
+						<small>
+							Created at: {new Date(passkey.createdAt).toLocaleString()}
+						</small>
+					</div>
+					<div>
+						<Button
+							disabled={isLoadingChallenge || isProcessingRegistration}
+							variant="outline"
+							size="icon"
+							onclick={() => {
+								deleteDialogOpen = true;
+								passkeyIdForDeletion = passkey.id;
+							}}
+						>
+							<LucideTrash class="pointer-events-none h-4 w-4 text-destructive" />
+						</Button>
+					</div>
+				</li>
+			{/each}
+			<AlertDialog.Root bind:open={deleteDialogOpen}>
+				<AlertDialog.Trigger />
+				<AlertDialog.Content>
+					<AlertDialog.Header>
+						<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+						<AlertDialog.Description>
+							This action cannot be undone. This will permanently delete your passkey and you won't
+							be able to login with it.
+						</AlertDialog.Description>
+					</AlertDialog.Header>
+					<AlertDialog.Footer>
+						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+						<form action="?/delete" method="post" use:enhance>
+							<input type="hidden" name="id" value={passkeyIdForDeletion} />
+							<AlertDialog.Action type="submit">
+								<span>Continue</span>
+							</AlertDialog.Action>
+						</form>
+					</AlertDialog.Footer>
+				</AlertDialog.Content>
+			</AlertDialog.Root>
+		</ul>
+	{/if}
+</div>
 
 {#if error}
 	<p class="text-red-500">{error}</p>
 {/if}
 
-<div class="mt-4 flex flex-col gap-y-4">
-	<div class="flex flex-col gap-y-3">
-		<Label for="passkeyname">Give a name to differentiate this passkey</Label>
-		<Input id="passkeyname" bind:value={passkeyname} type="text" placeholder="John's MacBook" />
-	</div>
-	<Button onclick={registerPasskey}>Add passkey</Button>
-</div>
-
 <h2 class="mt-10 w-full text-center">
-	Go back to <a class="underline underline-offset-2" href={env.PUBLIC_CALLBACK_URL}
-		>{env.PUBLIC_SITE_NAME}</a
-	>
+	Go back to <a class="underline underline-offset-2" href={env.PUBLIC_CALLBACK_URL}>
+		{env.PUBLIC_SITE_NAME}
+	</a>
 </h2>
