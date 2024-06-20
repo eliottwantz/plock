@@ -1,26 +1,14 @@
-import { env } from '$env/dynamic/private';
-import {
-	accountTable,
-	authProviderEnum,
-	selectUserSchema,
-	sessionSchema,
-	sessionTable,
-	userTable,
-	type User
-} from '$lib/db/schema';
-import { db } from '$lib/server/db';
-import { DrizzleSQLiteAdapter } from '@lucia-auth/adapter-drizzle';
+import { serverEnv } from '$lib/env/server';
+import { authProviderEnum, type Session, type User } from '$lib/db/schema';
+import { createDBAndAdapter, db } from '$lib/server/db';
 import { createId } from '@paralleldrive/cuid2';
 import { GitHub, Google } from 'arctic';
-import { type Cookie, Lucia } from 'lucia';
-import { z } from 'zod';
+import { Lucia, type Cookie } from 'lucia';
 
-const adapter = new DrizzleSQLiteAdapter(db, sessionTable, userTable);
-
-export const lucia = new Lucia(adapter, {
+export const lucia = new Lucia(createDBAndAdapter().adapter, {
 	sessionCookie: {
 		attributes: {
-			secure: env.ENV === 'PROD'
+			secure: serverEnv.ENV === 'PROD'
 		}
 	},
 	getUserAttributes(databaseUserAttributes) {
@@ -37,20 +25,15 @@ declare module 'lucia' {
 		DatabaseUserAttributes: User;
 		DatabaseSessionAttributes: DatabaseSessionAttributes;
 	}
-	type DatabaseUserAttributes = z.infer<typeof selectUserSchema>;
-	type DatabaseSessionAttributes = z.infer<typeof databaseSessionAttributes>;
+	type DatabaseUserAttributes = User;
+	type DatabaseSessionAttributes = Omit<Session, 'id' | 'user_id' | 'expires_at'>;
 }
-const databaseSessionAttributes = sessionSchema.omit({
-	id: true,
-	userId: true,
-	expiresAt: true
-});
 
-export const github = new GitHub(env.GITHUB_CLIENT_ID!, env.GITHUB_CLIENT_SECRET!);
+export const github = new GitHub(serverEnv.GITHUB_CLIENT_ID, serverEnv.GITHUB_CLIENT_SECRET);
 export const google = new Google(
-	env.GOOGLE_CLIENT_ID!,
-	env.GOOGLE_CLIENT_SECRET!,
-	env.GOOGLE_AUTH_CALLBACK_URL!
+	serverEnv.GOOGLE_CLIENT_ID,
+	serverEnv.GOOGLE_CLIENT_SECRET,
+	serverEnv.GOOGLE_AUTH_CALLBACK_URL
 );
 
 export type LoginInfo = {
@@ -65,52 +48,74 @@ export const handleLogin = async (
 	provider: (typeof authProviderEnum)[number],
 	info: LoginInfo
 ): Promise<Cookie> => {
-	const existingAccount = await db.query.accountTable.findFirst({
-		where: (table, { and, eq }) =>
-			and(eq(table.provider, provider), eq(table.providerUserId, info.providerId))
-	});
+	const existingAccount = await db()
+		.selectFrom('account')
+		.where('provider', '=', provider)
+		.where('provider_user_id', '=', info.providerId)
+		.selectAll()
+		.executeTakeFirst();
 	if (existingAccount) {
-		const session = await lucia.createSession(existingAccount.userId, {
-			createdAt: new Date(),
+		const session = await lucia.createSession(existingAccount.user_id, {
 			ip: info.ip,
-			userAgent: info.userAgent
+			user_agent: info.userAgent,
+			created_at: new Date()
 		});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		return sessionCookie;
 	} else {
-		const existingUser = await db.query.userTable.findFirst({
-			where: (table, { eq }) => eq(table.email, info.email)
-		});
+		const existingUser = await db()
+			.selectFrom('user')
+			.where('email', '=', info.email)
+			.selectAll()
+			.executeTakeFirst();
 
 		let userId: string;
 		if (!existingUser) {
 			userId = createId();
-			await db.transaction(async (tx) => {
-				await tx.insert(userTable).values({
-					id: userId,
-					name: info.name,
-					email: info.email,
-					picture: info.picture
+			await db()
+				.transaction()
+				.execute(async (tx) => {
+					await tx
+						.insertInto('user')
+						.values({
+							id: userId,
+							name: info.name,
+							email: info.email,
+							picture: info.picture,
+							created_at: new Date(),
+							updated_at: new Date()
+						})
+						.execute();
+
+					await tx
+						.insertInto('account')
+						.values({
+							provider,
+							provider_user_id: info.providerId,
+							user_id: userId,
+							created_at: new Date(),
+							updated_at: new Date()
+						})
+						.execute();
 				});
-				await tx.insert(accountTable).values({
-					provider,
-					providerUserId: info.providerId,
-					userId
-				});
-			});
 		} else {
 			userId = existingUser.id;
-			await db.insert(accountTable).values({
-				provider,
-				providerUserId: info.providerId,
-				userId
-			});
+			await db()
+				.insertInto('account')
+				.values({
+					provider,
+					provider_user_id: info.providerId,
+					user_id: userId,
+					created_at: new Date(),
+					updated_at: new Date()
+				})
+				.execute();
 		}
 
 		const session = await lucia.createSession(userId, {
-			createdAt: new Date(),
 			ip: info.ip,
-			userAgent: info.userAgent
+			user_agent: info.userAgent,
+			created_at: new Date()
 		});
 		const sessionCookie = lucia.createSessionCookie(session.id);
 		return sessionCookie;

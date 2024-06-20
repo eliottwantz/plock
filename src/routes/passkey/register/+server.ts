@@ -1,9 +1,7 @@
-import { env } from '$env/dynamic/public';
-import { challengeTable, credentialTable } from '$lib/db/schema';
+import { clientEnv } from '$lib/env/client';
 import { db } from '$lib/server/db';
 import { server } from '@passwordless-id/webauthn';
 import { json } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 
 export const POST = async ({ locals: { user }, request, url }) => {
@@ -36,18 +34,21 @@ export const POST = async ({ locals: { user }, request, url }) => {
 		console.log('Body: ', parsed);
 		const { challengeId, registration, passkeyname } = parsed.data;
 		// TODO: check for 5min max age
-		const challenge = await db.query.challengeTable.findFirst({
-			where: (table, { and, eq, lte }) => and(eq(table.id, challengeId), eq(table.userId, user.id))
-		});
+		const challenge = await db()
+			.selectFrom('challenge')
+			.where('id', '=', challengeId)
+			.where('user_id', '=', user.id)
+			.selectAll()
+			.executeTakeFirst();
 
 		if (!challenge) {
 			return json({ error: 'invalid_challenge' }, { status: 400 });
 		}
 
 		// Remove the challenge from the database because it is used
-		await db
-			.delete(challengeTable)
-			.where(eq(challengeTable.id, challenge.id))
+		await db()
+			.deleteFrom('challenge')
+			.where('id', '=', challenge.id)
 			.execute()
 			.catch((e) => {
 				console.log('Error deleting challenge: ', e);
@@ -55,7 +56,7 @@ export const POST = async ({ locals: { user }, request, url }) => {
 
 		const expected = {
 			challenge: challenge.challenge,
-			origin: env.PUBLIC_AUTH_ORIGIN ?? url.origin
+			origin: clientEnv.PUBLIC_AUTH_ORIGIN ?? url.origin
 		};
 
 		const registrationParsed = await server
@@ -69,16 +70,18 @@ export const POST = async ({ locals: { user }, request, url }) => {
 			return json({ error: 'invalid_credential' }, { status: 400 });
 		}
 
-		const credential = await db
-			.insert(credentialTable)
+		const credential = await db()
+			.insertInto('credential')
 			.values({
 				id: registrationParsed.credential.id,
-				userId: user.id,
+				user_id: user.id,
 				name: passkeyname,
-				publicKey: registrationParsed.credential.publicKey,
-				algorithm: registrationParsed.credential.algorithm
+				public_key: registrationParsed.credential.publicKey,
+				algorithm: registrationParsed.credential.algorithm,
+				created_at: new Date(),
+				updated_at: new Date()
 			})
-			.returning()
+			.returningAll()
 			.execute()
 			.then((res) => res.at(0));
 
@@ -91,6 +94,8 @@ export const POST = async ({ locals: { user }, request, url }) => {
 			name: credential.name
 		});
 	} catch (e) {
+		console.log('Catched error:');
+		console.error(e);
 		return json({ error: 'invalid_body' }, { status: 400 });
 	}
 };

@@ -1,6 +1,6 @@
-import { env } from '$env/dynamic/public';
+import { clientEnv } from '$lib/env/client';
 import { lucia } from '$lib/server/auth';
-import { error, fail, redirect } from '@sveltejs/kit';
+import { error, redirect } from '@sveltejs/kit';
 
 export const load = async ({ locals, cookies }) => {
 	console.log('You want to logout in +page.server!!!', 'session ?', locals.session !== null);
@@ -14,5 +14,5 @@ export const load = async ({ locals, cookies }) => {
 		path: '.',
 		...sessionCookie.attributes
 	});
-	redirect(302, env.PUBLIC_LOGOUT_URL);
+	redirect(302, clientEnv.PUBLIC_LOGOUT_URL);
 };

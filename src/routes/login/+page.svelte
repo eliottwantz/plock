@@ -1,7 +1,6 @@
 <script lang="ts">
-	import { goto, invalidateAll } from '$app/navigation';
-	import { env } from '$env/dynamic/public';
 	import { Button } from '$lib/components/ui/button';
+	import { clientEnv } from '$lib/env/client';
 	import {
 		AuthenticationResponseSchema,
 		ChallengeResponseSchema,
@@ -65,7 +64,7 @@
 				return;
 			}
 
-			window.location.href = env.PUBLIC_CALLBACK_URL;
+			window.location.href = clientEnv.PUBLIC_CALLBACK_URL;
 		} catch (e) {
 			console.log(e);
 			error = 'Failed to authenticate with passkey';

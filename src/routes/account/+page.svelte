@@ -1,22 +1,20 @@
 <script lang="ts">
 	import { enhance } from '$app/forms';
 	import { invalidateAll } from '$app/navigation';
-	import { env } from '$env/dynamic/public';
 	import Passkey from '$lib/components/icons/Passkey.svelte';
-	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import * as AlertDialog from '$lib/components/ui/alert-dialog';
+	import { Badge } from '$lib/components/ui/badge';
+	import { Button } from '$lib/components/ui/button';
+	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
-	import { LucideTrash } from 'lucide-svelte';
-	import * as Dialog from '$lib/components/ui/dialog';
-	import * as Tooltip from '$lib/components/ui/tooltip';
-	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import {
 		ChallengeResponseSchema,
 		ErrorResponseSchema,
 		RegistrationResponseSchema
 	} from '$lib/schemas';
 	import { client } from '@passwordless-id/webauthn';
-	import { Badge } from '$lib/components/ui/badge';
+	import { LucideTrash } from 'lucide-svelte';
 
 	let { data } = $props();
 	let error = $state<string | undefined>();
@@ -186,7 +184,7 @@
 							<Badge class="w-min" variant="default">{passkey.name}</Badge>
 						</div>
 						<small>
-							Created at: {new Date(passkey.createdAt).toLocaleString()}
+							Created at: {new Date(passkey.created_at).toLocaleString()}
 						</small>
 					</div>
 					<div>
@@ -232,9 +230,3 @@
 {#if error}
 	<p class="text-red-500">{error}</p>
 {/if}
-
-<h2 class="mt-10 w-full text-center">
-	Go back to <a class="underline underline-offset-2" href={env.PUBLIC_CALLBACK_URL}>
-		{env.PUBLIC_SITE_NAME}
-	</a>
-</h2>

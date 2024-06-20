@@ -1,10 +1,14 @@
-import { env } from '$env/dynamic/public';
+import { clientEnv } from '$lib/env/client';
 import { lucia } from '$lib/server/auth';
+import { db } from '$lib/server/db';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
+import { sql } from 'kysely';
 
 const auth: Handle = async ({ event, resolve }) => {
 	console.log('###### In HOOK #######');
+	const nbUsers = await sql<number>`select count(*) from user`.execute(db());
+	console.log('nbUsers', nbUsers);
 
 	const sessionId = event.cookies.get(lucia.sessionCookieName);
 	if (!sessionId) {
@@ -32,7 +36,7 @@ const auth: Handle = async ({ event, resolve }) => {
 	event.locals.session = session;
 
 	if (session && event.url.pathname.includes('login')) {
-		return redirect(302, env.PUBLIC_CALLBACK_URL);
+		return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);
 	}
 
 	return resolve(event);
