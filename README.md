@@ -6,6 +6,20 @@ Plock is an all-in-one authentication server, providing email & password, email 
 > N.B. This project is still in early development. It is not ready for production use yet.
 > It currently only supports `Turso` and `Postgres` as the database. I am gradually adding support for other databases, such as SQLite and MySQL.
 
+<br />
+<img src="./.github/plockdemo.gif" />
+
+## Table of content
+
+- [Plock](#Plock)
+  - [Table of content](#table-of-content)
+- [Usage](#usage)
+- [Environment variables](#environment-variables)
+  - [General environment](#general-environment)
+  - [Database environment](#database-environment)
+    - [Turso/LibSQL](#turso-libSQL)
+    - [Postgres](#postgresql)
+
 ## Usage
 
 Simply pull the Docker image and use it with your app:
@@ -54,7 +68,7 @@ Depending on the DB that you are using, set these environment variables accordin
 > [!TIP]
 > Use `host.docker.internal` instead of `localhost` for the DB host.
 
-#### Turso/LibSQL
+#### Turso / LibSQL
 
 | Name            | Description                                                                  |
 | --------------- | ---------------------------------------------------------------------------- |
