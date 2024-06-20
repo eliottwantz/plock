@@ -4,10 +4,11 @@
 	import Passkey from '$lib/components/icons/Passkey.svelte';
 	import * as AlertDialog from '$lib/components/ui/alert-dialog';
 	import { Badge } from '$lib/components/ui/badge';
-	import { Button } from '$lib/components/ui/button';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Dialog from '$lib/components/ui/dialog';
 	import { Input } from '$lib/components/ui/input';
 	import { Label } from '$lib/components/ui/label';
+	import * as Tooltip from '$lib/components/ui/tooltip';
 	import {
 		ChallengeResponseSchema,
 		ErrorResponseSchema,
@@ -181,24 +182,28 @@
 					<div class="flex flex-col gap-y-1">
 						<div class="flex items-center gap-x-3">
 							<Passkey class="h-7 w-7" />
-							<Badge class="w-min" variant="default">{passkey.name}</Badge>
+							<Badge variant="default">{passkey.name}</Badge>
 						</div>
 						<small>
 							Created at: {new Date(passkey.created_at).toLocaleString()}
 						</small>
 					</div>
 					<div>
-						<Button
-							disabled={isLoadingChallenge || isProcessingRegistration}
-							variant="outline"
-							size="icon"
-							onclick={() => {
-								deleteDialogOpen = true;
-								passkeyIdForDeletion = passkey.id;
-							}}
-						>
-							<LucideTrash class="pointer-events-none h-4 w-4 text-destructive" />
-						</Button>
+						<Tooltip.Root openDelay={200}>
+							<Tooltip.Trigger
+								onclick={() => {
+									deleteDialogOpen = true;
+									passkeyIdForDeletion = passkey.id;
+								}}
+								disabled={isLoadingChallenge || isProcessingRegistration}
+								class={buttonVariants({ variant: 'outline', size: 'icon' })}
+							>
+								<LucideTrash class="pointer-events-none h-4 w-4 text-destructive" />
+							</Tooltip.Trigger>
+							<Tooltip.Content>
+								<p>Delete passkey -{passkey.name}-</p>
+							</Tooltip.Content>
+						</Tooltip.Root>
 					</div>
 				</li>
 			{/each}

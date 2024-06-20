@@ -1,14 +1,10 @@
 import { clientEnv } from '$lib/env/client';
 import { lucia } from '$lib/server/auth';
-import { db } from '$lib/server/db';
 import { redirect, type Handle } from '@sveltejs/kit';
 import { sequence } from '@sveltejs/kit/hooks';
-import { sql } from 'kysely';
 
 const auth: Handle = async ({ event, resolve }) => {
 	console.log('###### In HOOK #######');
-	const nbUsers = await sql<number>`select count(*) from user`.execute(db());
-	console.log('nbUsers', nbUsers);
 
 	const sessionId = event.cookies.get(lucia.sessionCookieName);
 	if (!sessionId) {
