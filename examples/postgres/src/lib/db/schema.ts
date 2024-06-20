@@ -1,15 +1,15 @@
 import { createId } from '@paralleldrive/cuid2';
-import { integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import type { z } from 'zod';
 
-const createdAt = integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date());
-const updatedAt = integer('updated_at', { mode: 'timestamp_ms' })
+const createdAt = timestamp('created_at', { withTimezone: true }).notNull().defaultNow();
+const updatedAt = timestamp('updated_at', { withTimezone: true })
 	.notNull()
-	.default(new Date())
+	.defaultNow()
 	.$onUpdateFn(() => new Date());
 
-export const userTable = sqliteTable('user', {
+export const userTable = pgTable('user', {
 	id: text('id').primaryKey().$default(createId),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
@@ -21,7 +21,7 @@ export type User = typeof userTable.$inferSelect;
 export const insertUserSchema = createInsertSchema(userTable);
 export const selectUserSchema = createSelectSchema(userTable);
 
-export const sessionTable = sqliteTable('session', {
+export const sessionTable = pgTable('session', {
 	id: text('id').primaryKey(),
 	userId: text('user_id')
 		.notNull()
@@ -29,13 +29,16 @@ export const sessionTable = sqliteTable('session', {
 	userAgent: text('user_agent'),
 	ip: text('ip'),
 	createdAt,
-	expiresAt: integer('expires_at').notNull()
+	expiresAt: timestamp('expires_at', {
+		withTimezone: true,
+		mode: 'date'
+	}).notNull()
 });
 export type Session = typeof sessionTable.$inferSelect;
 export const sessionSchema = createSelectSchema(sessionTable);
 
 export const authProviderEnum = ['google', 'github'] as const;
-export const accountTable = sqliteTable(
+export const accountTable = pgTable(
 	'account',
 	{
 		provider: text('provider', { enum: authProviderEnum }).notNull(),
@@ -51,7 +54,7 @@ export const accountTable = sqliteTable(
 	})
 );
 
-export const challengeTable = sqliteTable('challenge', {
+export const challengeTable = pgTable('challenge', {
 	id: text('id').primaryKey(),
 	challenge: text('challenge').notNull(),
 	userId: text('user_id').references(() => userTable.id, { onDelete: 'cascade' }),
@@ -61,7 +64,7 @@ export type Challenge = typeof challengeTable.$inferSelect;
 export const challengeSchema = createSelectSchema(challengeTable);
 
 export const algorithmEnum = ['RS256', 'ES256'] as const;
-export const credentialTable = sqliteTable(
+export const credentialTable = pgTable(
 	'credential',
 	{
 		id: text('id').primaryKey(),

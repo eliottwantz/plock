@@ -6,8 +6,7 @@ if (!process.env.DB_URL) {
 
 export default defineConfig({
 	schema: './src/lib/db/schema.ts',
-	dialect: 'sqlite',
-	driver: 'turso',
+	dialect: 'postgresql',
 	dbCredentials: {
 		url: process.env.DB_URL
 	},
