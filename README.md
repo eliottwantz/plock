@@ -1,10 +1,10 @@
 # Plock
 
-Plock is an all in one authentication server, providing email & password, email verification codes, two-factor authentication, OAuth with social providers, and passkey authentication, with session management using cookies and bearer tokens.
+Plock is an all-in-one authentication server, providing email & password, email verification codes, two-factor authentication, OAuth with social providers, and passkey authentication, with session management using cookies and bearer tokens.
 
 > [!WARNING]
 > N.B. This project is still in early development. It is not ready for production use yet.
-> It is currently only supporting Turso as the database. I plan to add support for other databases in the near future, such as SQLite, PostgreSQL, and MySQL.
+> It currently only supports `Turso` and `Postgres` as the database. I am gradually adding support for other databases, such as SQLite and MySQL.
 
 ## Usage
 
@@ -15,7 +15,7 @@ docker pull ghcr.io/eliottwantz/plock:latest
 docker run -it --rm -p 5173:5173 ghcr.io/eliottwantz/plock:latest
 ```
 
-or with docker compose:
+or with docker-compose:
 
 ```yaml
 services:
@@ -49,7 +49,7 @@ Please check an example of the .env file in the example [examples/simple](./exam
 
 ### Database environment
 
-Depending on the DB that your are using, set these environment variables accordingly:
+Depending on the DB that you are using, set these environment variables accordingly:
 
 > [!TIP]
 > Use `host.docker.internal` instead of `localhost` for the DB host.
@@ -67,4 +67,4 @@ Depending on the DB that your are using, set these environment variables accordi
 | Name      | Description                                                                                                   |
 | --------- | ------------------------------------------------------------------------------------------------------------- |
 | `DB_TYPE` | The database type. Must be `postgres`.                                                                        |
-| `DB_URL`  | The postgres connection URL. Defaults to `postgresql://postgres:postgres@host.docker.internal:5432/postgres`. |
+| `DB_URL`  | The Postgres connection URL. Defaults to `postgresql://postgres:postgres@host.docker.internal:5432/postgres`. |
