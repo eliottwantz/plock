@@ -24,6 +24,7 @@
 	let isLoadingChallenge = $state(false);
 	let isProcessingRegistration = $state(false);
 	let dialogOpen = $state(false);
+	let deleteAccountDialogOpen = $state(false);
 	let deleteDialogOpen = $state(false);
 	let passkeyIdForDeletion = $state<string | undefined>();
 
@@ -104,134 +105,190 @@
 	<h1 class="scroll-m-20 text-4xl font-semibold tracking-tight lg:text-5xl">Account</h1>
 </div>
 
-<h2
-	class="mb-4 scroll-m-20 border-b pb-3 text-3xl font-semibold tracking-tight transition-colors first:mt-0"
->
-	Passkeys
-</h2>
-<p>
-	Passkeys are webauthn credentials that validate your identity using touch, facial recognition, a
-	device password, or a PIN. They can be used as a password replacement or as a 2FA method. <Button
-		variant="link"
-		size="sm"
-		class="text-blue-700 dark:text-blue-500/80"
-		href="https://developers.google.com/identity/passkeys"
-		target="_blank"
-	>
-		Learn more about passkeys.
-	</Button>
-</p>
-
-<div class="my-4 overflow-hidden rounded-lg border-2">
-	<div class="flex w-full items-center border-b-2 bg-foreground/10 px-6 py-4">
-		<p>Your passkeys ({data?.passkeys?.length || 0})</p>
-		<div id="passkey-menu-spacer" class="flex-1"></div>
-		<Button
-			disabled={isLoadingChallenge || isProcessingRegistration}
-			onclick={() => (dialogOpen = true)}
+<div class="flex flex-col gap-y-12">
+	<section>
+		<h2
+			class="mb-4 scroll-m-20 border-b pb-3 text-3xl font-semibold tracking-tight transition-colors first:mt-0"
 		>
-			Add a new passkey
-		</Button>
-		<Dialog.Root bind:open={dialogOpen}>
-			<Dialog.Trigger />
-			<Dialog.Content>
-				<Dialog.Header>
-					<Dialog.Title>Add a new passkey</Dialog.Title>
-					<Dialog.Description>
-						This will add a new passkey to your account. You can then use it to login afterwards.
-					</Dialog.Description>
-				</Dialog.Header>
-				<form
-					onsubmit={async (e) => {
-						e.preventDefault();
-						await registerPasskey();
+			Hello {data.user.name} 👋
+		</h2>
+		<div class="flex items-center gap-4">
+			<img src={data.user.picture} alt="profile" width="50" height="50" />
+			<div>
+				<p>{data.user.email}</p>
+				<small>Registered at: {new Date(data.user.created_at).toLocaleString()}</small>
+			</div>
+			<div class="flex-1"></div>
+			<Tooltip.Root openDelay={200}>
+				<Tooltip.Trigger
+					onclick={() => {
+						deleteAccountDialogOpen = true;
 					}}
-					class="mb-4 flex flex-col gap-y-2"
+					disabled={isLoadingChallenge || isProcessingRegistration}
+					class={buttonVariants({ variant: 'destructive', size: 'sm' })}
 				>
-					{#if modalError}
-						<p class=" text-red-500">{modalError}</p>
-					{/if}
-					<div class="flex flex-col gap-y-3">
-						<Label for="passkeyname">Give a name to differentiate this passkey</Label>
-						<Input
-							id="passkeyname"
-							bind:value={passkeyname}
-							type="text"
-							autocomplete="off"
-							placeholder="John's MacBook"
-						/>
-					</div>
-					<div class="mt-4 flex justify-end gap-x-2">
-						<Button
-							type="submit"
-							disabled={isLoadingChallenge || isProcessingRegistration}
-							class="flex items-center gap-x-1"
-						>
-							<Passkey class="h-6 w-6" />
-							<span>Add passkey</span>
-						</Button>
-					</div>
-				</form>
-			</Dialog.Content>
-		</Dialog.Root>
-	</div>
-	{#if data.passkeys.length}
-		<ul class="flex flex-col">
-			{#each data.passkeys as passkey}
-				<li class="flex items-center justify-between border-b-2 px-6 py-4 last:border-0">
-					<div class="flex flex-col gap-y-1">
-						<div class="flex items-center gap-x-3">
-							<Passkey class="h-7 w-7" />
-							<Badge variant="default">{passkey.name}</Badge>
-						</div>
-						<small>
-							Created at: {new Date(passkey.created_at).toLocaleString()}
-						</small>
-					</div>
-					<div>
-						<Tooltip.Root openDelay={200}>
-							<Tooltip.Trigger
-								onclick={() => {
-									deleteDialogOpen = true;
-									passkeyIdForDeletion = passkey.id;
-								}}
-								disabled={isLoadingChallenge || isProcessingRegistration}
-								class={buttonVariants({ variant: 'outline', size: 'icon' })}
-							>
-								<LucideTrash class="pointer-events-none h-4 w-4 text-destructive" />
-							</Tooltip.Trigger>
-							<Tooltip.Content>
-								<p>Delete passkey -{passkey.name}-</p>
-							</Tooltip.Content>
-						</Tooltip.Root>
-					</div>
-				</li>
-			{/each}
-			<AlertDialog.Root bind:open={deleteDialogOpen}>
+					<LucideTrash class="pointer-events-none h-4 w-4" />
+					<span class="hidden sm:ml-2 sm:block">Delete Account</span>
+				</Tooltip.Trigger>
+				<Tooltip.Content>
+					<p>Delete account</p>
+				</Tooltip.Content>
+			</Tooltip.Root>
+			<AlertDialog.Root bind:open={deleteAccountDialogOpen}>
 				<AlertDialog.Trigger />
 				<AlertDialog.Content>
 					<AlertDialog.Header>
 						<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
 						<AlertDialog.Description>
-							This action cannot be undone. This will permanently delete your passkey and you won't
-							be able to login with it.
+							This action cannot be undone. This will permanently delete your account and you will
+							lose all your data.
 						</AlertDialog.Description>
 					</AlertDialog.Header>
 					<AlertDialog.Footer>
 						<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
-						<form action="?/delete" method="post" use:enhance>
+						<form action="?/deleteAccount" method="post" use:enhance>
 							<input type="hidden" name="id" value={passkeyIdForDeletion} />
-							<AlertDialog.Action type="submit">
-								<span>Continue</span>
+							<AlertDialog.Action class={buttonVariants({ variant: 'destructive' })} type="submit">
+								<span>Delete Account</span>
 							</AlertDialog.Action>
 						</form>
 					</AlertDialog.Footer>
 				</AlertDialog.Content>
 			</AlertDialog.Root>
-		</ul>
+		</div>
+	</section>
+
+	<section>
+		<h2
+			class="mb-4 scroll-m-20 border-b pb-3 text-3xl font-semibold tracking-tight transition-colors first:mt-0"
+		>
+			Passkeys
+		</h2>
+		<p>
+			Passkeys are webauthn credentials that validate your identity using touch, facial recognition,
+			a device password, or a PIN. They can be used as a password replacement or as a 2FA method. <Button
+				variant="link"
+				size="sm"
+				class="text-blue-700 dark:text-blue-500/80"
+				href="https://developers.google.com/identity/passkeys"
+				target="_blank"
+			>
+				Learn more about passkeys.
+			</Button>
+		</p>
+		<div class="my-4 overflow-hidden rounded-lg border-2">
+			<div class="flex w-full items-center border-b-2 bg-foreground/10 px-6 py-4">
+				<p>Your passkeys ({data?.passkeys?.length || 0})</p>
+				<div id="passkey-menu-spacer" class="flex-1"></div>
+				<Button
+					disabled={isLoadingChallenge || isProcessingRegistration}
+					onclick={() => (dialogOpen = true)}
+				>
+					Add a new passkey
+				</Button>
+				<Dialog.Root bind:open={dialogOpen}>
+					<Dialog.Trigger />
+					<Dialog.Content>
+						<Dialog.Header>
+							<Dialog.Title>Add a new passkey</Dialog.Title>
+							<Dialog.Description>
+								This will add a new passkey to your account. You can then use it to login
+								afterwards.
+							</Dialog.Description>
+						</Dialog.Header>
+						<form
+							onsubmit={async (e) => {
+								e.preventDefault();
+								await registerPasskey();
+							}}
+							class="mb-4 flex flex-col gap-y-2"
+						>
+							{#if modalError}
+								<p class=" text-red-500">{modalError}</p>
+							{/if}
+							<div class="flex flex-col gap-y-3">
+								<Label for="passkeyname">Give a name to differentiate this passkey</Label>
+								<Input
+									id="passkeyname"
+									bind:value={passkeyname}
+									type="text"
+									autocomplete="off"
+									placeholder="John's MacBook"
+								/>
+							</div>
+							<div class="mt-4 flex justify-end gap-x-2">
+								<Button
+									type="submit"
+									disabled={isLoadingChallenge || isProcessingRegistration}
+									class="flex items-center gap-x-1"
+								>
+									<Passkey class="h-6 w-6" />
+									<span>Add passkey</span>
+								</Button>
+							</div>
+						</form>
+					</Dialog.Content>
+				</Dialog.Root>
+			</div>
+			{#if data.passkeys.length}
+				<ul class="flex flex-col">
+					{#each data.passkeys as passkey}
+						<li class="flex items-center justify-between border-b-2 px-6 py-4 last:border-0">
+							<div class="flex flex-col gap-y-1">
+								<div class="flex items-center gap-x-3">
+									<Passkey class="h-7 w-7" />
+									<Badge variant="default">{passkey.name}</Badge>
+								</div>
+								<small>
+									Created at: {new Date(passkey.created_at).toLocaleString()}
+								</small>
+							</div>
+							<div>
+								<Tooltip.Root openDelay={200}>
+									<Tooltip.Trigger
+										onclick={() => {
+											deleteDialogOpen = true;
+											passkeyIdForDeletion = passkey.id;
+										}}
+										disabled={isLoadingChallenge || isProcessingRegistration}
+										class={buttonVariants({ variant: 'outline', size: 'icon' })}
+									>
+										<LucideTrash class="pointer-events-none h-4 w-4 text-destructive" />
+									</Tooltip.Trigger>
+									<Tooltip.Content>
+										<p>Delete passkey -{passkey.name}-</p>
+									</Tooltip.Content>
+								</Tooltip.Root>
+							</div>
+						</li>
+					{/each}
+					<AlertDialog.Root bind:open={deleteDialogOpen}>
+						<AlertDialog.Trigger />
+						<AlertDialog.Content>
+							<AlertDialog.Header>
+								<AlertDialog.Title>Are you absolutely sure?</AlertDialog.Title>
+								<AlertDialog.Description>
+									This action cannot be undone. This will permanently delete your passkey and you
+									won't be able to login with it.
+								</AlertDialog.Description>
+							</AlertDialog.Header>
+							<AlertDialog.Footer>
+								<AlertDialog.Cancel>Cancel</AlertDialog.Cancel>
+								<form action="?/deletePasskey" method="post" use:enhance>
+									<input type="hidden" name="id" value={passkeyIdForDeletion} />
+									<AlertDialog.Action type="submit">
+										<span>Continue</span>
+									</AlertDialog.Action>
+								</form>
+							</AlertDialog.Footer>
+						</AlertDialog.Content>
+					</AlertDialog.Root>
+				</ul>
+			{/if}
+		</div>
+	</section>
+
+	{#if error}
+		<p class="text-red-500">{error}</p>
 	{/if}
 </div>
-
-{#if error}
-	<p class="text-red-500">{error}</p>
-{/if}
