@@ -1,80 +1,58 @@
-import { createId } from '@paralleldrive/cuid2';
-import { integer, primaryKey, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core';
-import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
-import type { z } from 'zod';
-
-const createdAt = integer('created_at', { mode: 'timestamp_ms' }).notNull().default(new Date());
-const updatedAt = integer('updated_at', { mode: 'timestamp_ms' })
-	.notNull()
-	.default(new Date())
-	.$onUpdateFn(() => new Date());
-
-export const userTable = sqliteTable('user', {
-	id: text('id').primaryKey().$default(createId),
-	name: text('name').notNull(),
-	email: text('email').notNull().unique(),
-	picture: text('picture'),
-	createdAt,
-	updatedAt
-});
-export type User = typeof userTable.$inferSelect;
-export const insertUserSchema = createInsertSchema(userTable);
-export const selectUserSchema = createSelectSchema(userTable);
-
-export const sessionTable = sqliteTable('session', {
-	id: text('id').primaryKey(),
-	userId: text('user_id')
-		.notNull()
-		.references(() => userTable.id, { onDelete: 'cascade' }),
-	userAgent: text('user_agent'),
-	ip: text('ip'),
-	createdAt,
-	expiresAt: integer('expires_at').notNull()
-});
-export type Session = typeof sessionTable.$inferSelect;
-export const sessionSchema = createSelectSchema(sessionTable);
+import type { ColumnType, Selectable } from 'kysely';
 
 export const authProviderEnum = ['google', 'github'] as const;
-export const accountTable = sqliteTable(
-	'account',
-	{
-		provider: text('provider', { enum: authProviderEnum }).notNull(),
-		providerUserId: text('provider_user_id').notNull(),
-		userId: text('user_id')
-			.notNull()
-			.references(() => userTable.id, { onDelete: 'cascade' })
-	},
-	(table) => ({
-		pk: primaryKey({ columns: [table.provider, table.providerUserId] })
-	})
-);
-
-export const challengeTable = sqliteTable('challenge', {
-	id: text('id').primaryKey(),
-	challenge: text('challenge').notNull(),
-	userId: text('user_id').references(() => userTable.id, { onDelete: 'cascade' }),
-	createdAt
-});
-export type Challenge = typeof challengeTable.$inferSelect;
-export const challengeSchema = createSelectSchema(challengeTable);
-
 export const algorithmEnum = ['RS256', 'ES256'] as const;
-export const credentialTable = sqliteTable(
-	'credential',
-	{
-		id: text('id').primaryKey(),
-		userId: text('user_id')
-			.notNull()
-			.references(() => userTable.id, { onDelete: 'cascade' }),
-		name: text('name').notNull(),
-		publicKey: text('public_key').notNull(),
-		algorithm: text('algorithm', { enum: algorithmEnum }).notNull(),
-		createdAt,
-		updatedAt
-	},
-	(table) => ({
-		unique_name: uniqueIndex('unique_name').on(table.userId, table.name)
-	})
-);
-export const credentialSchema = createSelectSchema(credentialTable);
-export type Credential = z.infer<typeof credentialSchema>;
+
+export type Database = {
+	user: UserTable;
+	session: SessionTable;
+	account: AccountTable;
+	challenge: ChallengeTable;
+	credential: CredentialTable;
+};
+
+type CreatedAt = ColumnType<Date, Date, never>;
+type UpdatedAt = ColumnType<Date, Date, Date>;
+type Timestamps = {
+	created_at: CreatedAt;
+	updated_at: UpdatedAt;
+};
+
+type UserTable = {
+	id: string;
+	name: string;
+	email: string;
+	picture: string | null;
+} & Timestamps;
+export type User = Selectable<UserTable>;
+
+type SessionTable = {
+	id: string;
+	user_id: string;
+	user_agent: string | null;
+	ip: string | null;
+	expires_at: number;
+	created_at: CreatedAt;
+};
+export type Session = Selectable<SessionTable>;
+
+type AccountTable = {
+	provider: (typeof authProviderEnum)[number];
+	provider_user_id: string;
+	user_id: string;
+} & Timestamps;
+
+type ChallengeTable = {
+	id: string;
+	challenge: string;
+	user_id: string | null;
+	created_at: CreatedAt;
+};
+
+type CredentialTable = {
+	id: string;
+	user_id: string;
+	name: string;
+	public_key: string;
+	algorithm: (typeof algorithmEnum)[number];
+} & Timestamps;

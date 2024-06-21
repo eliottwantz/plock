@@ -42,7 +42,9 @@ export const accountTable = sqliteTable(
 		providerUserId: text('provider_user_id').notNull(),
 		userId: text('user_id')
 			.notNull()
-			.references(() => userTable.id, { onDelete: 'cascade' })
+			.references(() => userTable.id, { onDelete: 'cascade' }),
+		createdAt,
+		updatedAt
 	},
 	(table) => ({
 		pk: primaryKey({ columns: [table.provider, table.providerUserId] })

@@ -1,6 +1,5 @@
 <script lang="ts">
 	import { page } from '$app/stores';
-	import { env } from '$env/dynamic/public';
 </script>
 
 <main class="flex h-dvh flex-col items-center justify-center gap-3 text-muted-foreground">
@@ -10,9 +9,4 @@
 			<h1 class="text-lg">{$page.error?.message}</h1>
 		</div>
 	</div>
-	<h2>
-		Go back to <a class="underline underline-offset-2" href={env.PUBLIC_CALLBACK_URL}
-			>{env.PUBLIC_SITE_NAME}</a
-		>
-	</h2>
 </main>

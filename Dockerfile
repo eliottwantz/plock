@@ -8,7 +8,7 @@ RUN bun install
 
 COPY . .
 
-ENV TURSO_URL="http://localhost:8081"
+# ENV TURSO_URL="http://localhost:8081"
 RUN bun --bun run build
 
 FROM oven/bun:latest as deps-prod

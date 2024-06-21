@@ -1,18 +1,18 @@
-import { challengeTable } from '$lib/db/schema';
 import { db } from '$lib/server/db';
 import { json } from '@sveltejs/kit';
 import { generateState } from 'arctic';
 import { generateId } from 'lucia';
 
 export const GET = async ({ locals: { user } }) => {
-	const challenge = await db
-		.insert(challengeTable)
+	const challenge = await db()
+		.insertInto('challenge')
 		.values({
 			id: generateId(15),
 			challenge: generateState(),
-			userId: user?.id
+			user_id: user?.id || null,
+			created_at: new Date()
 		})
-		.returning()
+		.returningAll()
 		.execute()
 		.then((res) => res.at(0));
 

@@ -1,18 +1,19 @@
-import { credentialTable } from '$lib/db/schema';
+import { clientEnv } from '$lib/env/client';
 import { db } from '$lib/server/db';
 import { Type } from '@sinclair/typebox';
 import { Value } from '@sinclair/typebox/value';
 import { fail, redirect } from '@sveltejs/kit';
-import { eq } from 'drizzle-orm';
 
 export const load = async ({ locals: { user } }) => {
 	if (!user) {
 		return redirect(302, '/login');
 	}
 
-	const passkeys = await db.query.credentialTable.findMany({
-		where: (table, { eq }) => eq(table.userId, user.id)
-	});
+	const passkeys = await db()
+		.selectFrom('credential')
+		.where('user_id', '=', user.id)
+		.selectAll()
+		.execute();
 
 	return {
 		user,
@@ -21,7 +22,16 @@ export const load = async ({ locals: { user } }) => {
 };
 
 export const actions = {
-	delete: async ({ request, locals: { user } }) => {
+	deleteAccount: async ({ locals: { user } }) => {
+		if (!user) {
+			return fail(403, { success: false, error: 'not_authenticated' });
+		}
+
+		await db().deleteFrom('user').where('id', '=', user.id).execute();
+
+		return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);
+	},
+	deletePasskey: async ({ request, locals: { user } }) => {
 		if (!user) {
 			return fail(403, { success: false, error: 'not_authenticated' });
 		}
@@ -36,7 +46,7 @@ export const actions = {
 		}
 
 		const { id } = body;
-		await db.delete(credentialTable).where(eq(credentialTable.id, id)).execute();
+		await db().deleteFrom('credential').where('id', '=', id).execute();
 
 		return {
 			success: true
