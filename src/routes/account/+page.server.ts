@@ -9,7 +9,7 @@ export const load = async ({ locals: { user } }) => {
 		return redirect(302, '/login');
 	}
 
-	const passkeys = await db()
+	const passkeys = await db
 		.selectFrom('credential')
 		.where('user_id', '=', user.id)
 		.selectAll()
@@ -27,7 +27,7 @@ export const actions = {
 			return fail(403, { success: false, error: 'not_authenticated' });
 		}
 
-		await db().deleteFrom('user').where('id', '=', user.id).execute();
+		await db.deleteFrom('user').where('id', '=', user.id).execute();
 
 		return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);
 	},
@@ -46,7 +46,7 @@ export const actions = {
 		}
 
 		const { id } = body;
-		await db().deleteFrom('credential').where('id', '=', id).execute();
+		await db.deleteFrom('credential').where('id', '=', id).execute();
 
 		return {
 			success: true
