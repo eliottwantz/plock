@@ -34,7 +34,7 @@ export const POST = async ({ locals: { user }, request, url }) => {
 		console.log('Body: ', parsed);
 		const { challengeId, registration, passkeyname } = parsed.data;
 		// TODO: check for 5min max age
-		const challenge = await db()
+		const challenge = await db
 			.selectFrom('challenge')
 			.where('id', '=', challengeId)
 			.where('user_id', '=', user.id)
@@ -46,7 +46,7 @@ export const POST = async ({ locals: { user }, request, url }) => {
 		}
 
 		// Remove the challenge from the database because it is used
-		await db()
+		await db
 			.deleteFrom('challenge')
 			.where('id', '=', challenge.id)
 			.execute()
@@ -70,7 +70,7 @@ export const POST = async ({ locals: { user }, request, url }) => {
 			return json({ error: 'invalid_credential' }, { status: 400 });
 		}
 
-		const credential = await db()
+		const credential = await db
 			.insertInto('credential')
 			.values({
 				id: registrationParsed.credential.id,

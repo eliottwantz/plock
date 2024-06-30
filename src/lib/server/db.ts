@@ -1,3 +1,4 @@
+import { env } from '$env/dynamic/private';
 import type { Database } from '$lib/db/schema';
 import { serverEnv } from '$lib/env/server';
 import { createClient } from '@libsql/client';
@@ -56,6 +57,10 @@ if (serverEnv.DB_TYPE === 'libsql') {
 } else {
 	dialect = new MemoryDialect();
 }
+
+console.log('dialect', dialect);
+console.log('\n\nENV\n', env);
+console.log('\n\nPROCESS.ENV\n', process.env);
 
 export const db = new Kysely<Database>({
 	dialect

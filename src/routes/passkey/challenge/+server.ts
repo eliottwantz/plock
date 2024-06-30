@@ -4,7 +4,7 @@ import { generateState } from 'arctic';
 import { generateId } from 'lucia';
 
 export const GET = async ({ locals: { user } }) => {
-	const challenge = await db()
+	const challenge = await db
 		.insertInto('challenge')
 		.values({
 			id: generateId(15),

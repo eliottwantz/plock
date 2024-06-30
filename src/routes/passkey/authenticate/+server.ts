@@ -24,7 +24,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 
 	const { challengeId, authentication } = parsed.data;
 	// TODO: check for 5min max age
-	const challenge = await db()
+	const challenge = await db
 		.selectFrom('challenge')
 		.where('id', '=', challengeId)
 		.selectAll()
@@ -35,7 +35,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 	}
 
 	// Remove the challenge from the database because it is used
-	await db()
+	await db
 		.deleteFrom('challenge')
 		.where('id', '=', challenge.id)
 		.execute()
@@ -43,7 +43,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 			console.log('Error deleting challenge: ', e);
 		});
 
-	const credential = await db()
+	const credential = await db
 		.selectFrom('credential')
 		.where('id', '=', authentication.credentialId)
 		.selectAll()
@@ -79,7 +79,7 @@ export const POST = async ({ request, url, cookies, getClientAddress }) => {
 		return json({ error: 'authentication_failed' }, { status: 400 });
 	}
 
-	const user = await db()
+	const user = await db
 		.selectFrom('user')
 		.where('id', '=', credential.user_id)
 		.selectAll()

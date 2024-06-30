@@ -24,6 +24,8 @@
 // 	);
 // type ServerEnv = z.infer<typeof envSchema>;
 
+import { env } from '$env/dynamic/private';
+
 export type ServerEnv = {
 	ENV: 'DEV' | 'PROD';
 	GOOGLE_CLIENT_ID: string;
@@ -43,4 +45,4 @@ export type ServerEnv = {
 	  }
 );
 
-export const serverEnv = process.env as ServerEnv;
+export const serverEnv = env as ServerEnv;
