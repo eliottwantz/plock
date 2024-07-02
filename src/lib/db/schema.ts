@@ -1,6 +1,6 @@
 import type { ColumnType, Selectable } from 'kysely';
 
-export const authProviderEnum = ['google', 'github'] as const;
+export const authProviderEnum = ['email', 'google', 'github'] as const;
 export const algorithmEnum = ['RS256', 'ES256'] as const;
 
 export type Database = {
@@ -22,6 +22,7 @@ type UserTable = {
 	id: string;
 	name: string;
 	email: string;
+	password_hash: string | null;
 	picture: string | null;
 } & Timestamps;
 export type User = Selectable<UserTable>;

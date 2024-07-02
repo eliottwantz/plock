@@ -1,5 +1,5 @@
 import { clientEnv } from '$lib/env/client';
-import { google, handleLogin } from '$lib/server/auth';
+import { google, handleOauthLogin } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 import { OAuth2RequestError } from 'arctic';
 
@@ -43,7 +43,7 @@ export const GET = async (event) => {
 		const googleUser: GoogleUserResult = await googleUserResponse.json();
 		console.log('GOT GOOGLE USER', googleUser);
 
-		const sessionCookie = await handleLogin('google', {
+		const sessionCookie = await handleOauthLogin('google', {
 			providerId: googleUser.sub,
 			email: googleUser.email,
 			name: googleUser.name,

@@ -1,9 +1,8 @@
 import { serverEnv } from '$lib/env/server';
 import { authProviderEnum, type Session, type User } from '$lib/db/schema';
 import { db } from '$lib/server/db';
-import { createId } from '@paralleldrive/cuid2';
 import { GitHub, Google } from 'arctic';
-import { Lucia, type Cookie } from 'lucia';
+import { Lucia, generateIdFromEntropySize, type Cookie } from 'lucia';
 import { adapter } from '$lib/server/db';
 
 export const lucia = new Lucia(adapter, {
@@ -14,6 +13,8 @@ export const lucia = new Lucia(adapter, {
 		}
 	},
 	getUserAttributes(databaseUserAttributes) {
+		// const { password_hash, ...user } = databaseUserAttributes;
+		// return user;
 		return databaseUserAttributes;
 	},
 	getSessionAttributes(databaseSessionAttributes) {
@@ -24,10 +25,10 @@ export const lucia = new Lucia(adapter, {
 declare module 'lucia' {
 	interface Register {
 		Lucia: typeof lucia;
-		DatabaseUserAttributes: User;
+		DatabaseUserAttributes: DatabaseUserAttributes;
 		DatabaseSessionAttributes: DatabaseSessionAttributes;
 	}
-	type DatabaseUserAttributes = User;
+	type DatabaseUserAttributes = Omit<User, 'password_hash'>;
 	type DatabaseSessionAttributes = Omit<Session, 'id' | 'user_id' | 'expires_at'>;
 }
 
@@ -38,7 +39,7 @@ export const google = new Google(
 	serverEnv.GOOGLE_AUTH_CALLBACK_URL
 );
 
-export type LoginInfo = {
+export type OauthLoginInfo = {
 	providerId: string;
 	name: string;
 	email: string;
@@ -46,9 +47,9 @@ export type LoginInfo = {
 	ip: string | null;
 	userAgent: string | null;
 };
-export const handleLogin = async (
+export const handleOauthLogin = async (
 	provider: (typeof authProviderEnum)[number],
-	info: LoginInfo
+	info: OauthLoginInfo
 ): Promise<Cookie> => {
 	const existingAccount = await db
 		.selectFrom('account')
@@ -73,7 +74,8 @@ export const handleLogin = async (
 
 		let userId: string;
 		if (!existingUser) {
-			userId = createId();
+			// userId = createId();
+			userId = generateIdFromEntropySize(10);
 			await db.transaction().execute(async (tx) => {
 				await tx
 					.insertInto('user')

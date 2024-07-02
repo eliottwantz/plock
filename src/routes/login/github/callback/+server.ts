@@ -1,5 +1,5 @@
 import { clientEnv } from '$lib/env/client';
-import { github, handleLogin } from '$lib/server/auth';
+import { github, handleOauthLogin } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 import { OAuth2RequestError } from 'arctic';
 
@@ -55,7 +55,7 @@ export const GET = async (event) => {
 
 		const email = primaryEmail.email;
 
-		const sessionCookie = await handleLogin('github', {
+		const sessionCookie = await handleOauthLogin('github', {
 			providerId: githubUser.id.toString(),
 			email,
 			name: githubUser.name,

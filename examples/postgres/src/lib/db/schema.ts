@@ -13,6 +13,7 @@ export const userTable = pgTable('user', {
 	id: text('id').primaryKey().$default(createId),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
+	passwordHash: text('password_hash'),
 	picture: text('picture'),
 	createdAt,
 	updatedAt
@@ -37,7 +38,7 @@ export const sessionTable = pgTable('session', {
 export type Session = typeof sessionTable.$inferSelect;
 export const sessionSchema = createSelectSchema(sessionTable);
 
-export const authProviderEnum = ['google', 'github'] as const;
+export const authProviderEnum = ['email', 'google', 'github'] as const;
 export const accountTable = pgTable(
 	'account',
 	{

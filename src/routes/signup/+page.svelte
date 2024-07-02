@@ -6,7 +6,7 @@
 	import {
 		AuthenticationResponseSchema,
 		ChallengeResponseSchema,
-		EmailPasswordLoginSchema,
+		EmailPasswordRegistrationSchema,
 		ErrorResponseSchema
 	} from '$lib/schemas';
 	import { client } from '@passwordless-id/webauthn';
@@ -15,7 +15,7 @@
 
 	let { data } = $props();
 	let form = superForm(data.form, {
-		validators: zodClient(EmailPasswordLoginSchema)
+		validators: zodClient(EmailPasswordRegistrationSchema)
 	});
 	const { form: formData, enhance, message } = form;
 	let error = $state<string | undefined>();
@@ -85,9 +85,9 @@
 </script>
 
 <div class="mx-auto flex max-w-md flex-col gap-y-4">
-	<h1 class=" text-center text-3xl font-semibold">Sign in</h1>
+	<h1 class=" text-center text-3xl font-semibold">Sign up</h1>
 	<small class="mb-4 text-center text-sm text-muted-foreground">
-		Enter your email and password below sign in to your account
+		Enter your name, email and password below create your account
 	</small>
 	{#if error}
 		<p class="text-red-500">{error}</p>
@@ -97,6 +97,19 @@
 		class="flex w-full flex-col items-center gap-y-4 text-lg"
 	>
 		<form method="post" use:enhance class="flex w-full flex-col">
+			<Form.Field class="space-y-1" {form} name="name">
+				<Form.Control let:attrs>
+					<Form.Label>Name</Form.Label>
+					<Input
+						{...attrs}
+						type="text"
+						autocomplete="name"
+						bind:value={$formData.name}
+						placeholder="John Doe"
+					/>
+				</Form.Control>
+				<Form.FieldErrors />
+			</Form.Field>
 			<Form.Field class="space-y-1" {form} name="email">
 				<Form.Control let:attrs>
 					<Form.Label>Email</Form.Label>
@@ -122,10 +135,10 @@
 				</Form.Control>
 				<Form.FieldErrors />
 			</Form.Field>
-			<Form.Button class="mt-2">Sign In</Form.Button>
+			<Form.Button class="mt-2">Sign Up</Form.Button>
 			<small data-sveltekit-preload-data="hover">
-				No account?
-				<a href="/signup" class="underline underline-offset-2">Sign up</a>
+				Already have an account?
+				<a href="/signin" class="underline underline-offset-2">Sign in</a>
 				instead.
 			</small>
 		</form>
