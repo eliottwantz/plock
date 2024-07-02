@@ -46,11 +46,11 @@ if (serverEnv.DB_TYPE === 'libsql') {
 		}
 	);
 } else if (serverEnv.DB_TYPE === 'postgres') {
-	const db = postgres(serverEnv.DB_URL);
+	const postgresConnection = postgres(serverEnv.DB_URL);
 	dialect = new PostgresJSDialect({
-		postgres: db
+		postgres: postgresConnection
 	});
-	adapter = new PostgresJsAdapter(db, {
+	adapter = new PostgresJsAdapter(postgresConnection, {
 		session: 'session',
 		user: 'user'
 	});

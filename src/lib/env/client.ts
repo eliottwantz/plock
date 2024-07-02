@@ -6,10 +6,12 @@
 // });
 // type ClientEnv = z.infer<typeof envSchema>;
 
+import { env } from '$env/dynamic/public';
+
 type ClientEnv = {
 	PUBLIC_AUTH_ORIGIN: string;
 	PUBLIC_CALLBACK_URL: string;
 	PUBLIC_LOGOUT_URL: string;
 	PUBLIC_SITE_NAME: string;
 };
-export const clientEnv = process.env as ClientEnv;
+export const clientEnv = env as ClientEnv;

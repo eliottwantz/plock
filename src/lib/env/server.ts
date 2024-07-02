@@ -33,6 +33,7 @@ export type ServerEnv = {
 	GOOGLE_AUTH_CALLBACK_URL: string;
 	GITHUB_CLIENT_ID: string;
 	GITHUB_CLIENT_SECRET: string;
+	COOKIE_SUBDOMAIN: string;
 } & (
 	| {
 			DB_TYPE: 'libsql';

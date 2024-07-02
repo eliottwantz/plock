@@ -77,7 +77,10 @@
 	{#if error}
 		<p class="text-red-500">{error}</p>
 	{/if}
-	<div class="flex w-full flex-col items-center gap-y-4 text-lg">
+	<div
+		data-sveltekit-preload-data="false"
+		class="flex w-full flex-col items-center gap-y-4 text-lg"
+	>
 		<Button
 			variant="secondary"
 			href="/login/google"

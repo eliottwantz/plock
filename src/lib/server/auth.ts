@@ -9,7 +9,8 @@ import { adapter } from '$lib/server/db';
 export const lucia = new Lucia(adapter, {
 	sessionCookie: {
 		attributes: {
-			secure: serverEnv.ENV === 'PROD'
+			secure: serverEnv.ENV === 'PROD',
+			domain: serverEnv.COOKIE_SUBDOMAIN
 		}
 	},
 	getUserAttributes(databaseUserAttributes) {
