@@ -1,9 +1,12 @@
 import { serverEnv } from '$lib/env/server';
-import { authProviderEnum, type Session, type User } from '$lib/db/schema';
+import { authProviderEnum, type Database, type Session, type User as DBUser } from '$lib/db/schema';
 import { db } from '$lib/server/db';
 import { GitHub, Google } from 'arctic';
-import { Lucia, generateIdFromEntropySize, type Cookie } from 'lucia';
+import { Lucia, generateId, generateIdFromEntropySize, type Cookie, type User } from 'lucia';
 import { adapter } from '$lib/server/db';
+import { generateRandomString, alphabet } from 'oslo/crypto';
+import { createDate, isWithinExpirationDate, TimeSpan } from 'oslo';
+import type { Transaction } from 'kysely';
 
 export const lucia = new Lucia(adapter, {
 	sessionCookie: {
@@ -28,7 +31,7 @@ declare module 'lucia' {
 		DatabaseUserAttributes: DatabaseUserAttributes;
 		DatabaseSessionAttributes: DatabaseSessionAttributes;
 	}
-	type DatabaseUserAttributes = Omit<User, 'password_hash'>;
+	type DatabaseUserAttributes = Omit<DBUser, 'password_hash'>;
 	type DatabaseSessionAttributes = Omit<Session, 'id' | 'user_id' | 'expires_at'>;
 }
 
@@ -123,3 +126,48 @@ export const handleOauthLogin = async (
 		return sessionCookie;
 	}
 };
+
+export async function generateEmailVerificationCode(
+	tx: Transaction<Database>,
+	userId: string,
+	email: string
+): Promise<string> {
+	const code = generateRandomString(8, alphabet('0-9'));
+	await tx.deleteFrom('email_verification_code').where('user_id', '=', userId).execute();
+	await tx
+		.insertInto('email_verification_code')
+		.values({
+			id: generateId(11),
+			user_id: userId,
+			email,
+			code,
+			created_at: new Date(),
+			expires_at: createDate(new TimeSpan(15, 'm')) // 15 minutes
+		})
+		.execute();
+	return code;
+}
+
+export async function verifyVerificationCode(user: User, code: string): Promise<boolean> {
+	const databaseCode = await db.transaction().execute(async (tx) => {
+		const databaseCode = await tx
+			.selectFrom('email_verification_code')
+			.where('user_id', '=', user.id)
+			.selectAll()
+			.executeTakeFirst();
+		if (!databaseCode || databaseCode.code !== code) {
+			return false;
+		}
+		await tx.deleteFrom('email_verification_code').where('id', '=', databaseCode.id).execute();
+		return databaseCode;
+	});
+	if (!databaseCode) return false;
+
+	if (!isWithinExpirationDate(databaseCode.expires_at)) {
+		return false;
+	}
+	if (databaseCode.email !== user.email) {
+		return false;
+	}
+	return true;
+}

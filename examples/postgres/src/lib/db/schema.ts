@@ -85,3 +85,19 @@ export const credentialTable = pgTable(
 );
 export const credentialSchema = createSelectSchema(credentialTable);
 export type Credential = z.infer<typeof credentialSchema>;
+
+export const emailVerificationCodeTable = pgTable('email_verification_code', {
+	id: text('id').primaryKey().$default(createId),
+	code: text('code').notNull(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => userTable.id, { onDelete: 'cascade' }),
+	email: text('email').notNull(),
+	expiresAt: timestamp('expires_at', {
+		withTimezone: true,
+		mode: 'date'
+	}).notNull(),
+	createdAt
+});
+export type EmailVerificationCode = typeof emailVerificationCodeTable.$inferSelect;
+export const emailVerificationCodeSchema = createSelectSchema(emailVerificationCodeTable);

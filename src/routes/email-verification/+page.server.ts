@@ -1,22 +1,62 @@
-import { superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
 import { otpSchema } from './otpschema';
-import { fail } from '@sveltejs/kit';
-
-export const load = async () => {
-	return {
-		form: await superValidate(zod(otpSchema))
-	};
-};
+import { fail, redirect } from '@sveltejs/kit';
+import { lucia, verifyVerificationCode } from '$lib/server/auth';
+import { db } from '$lib/server/db';
+import { clientEnv } from '$lib/env/client';
 
 export const actions = {
-	default: async ({ request }) => {
-		const form = await superValidate(request, zod(otpSchema));
+	default: async ({ request, locals: { user }, cookies, getClientAddress }) => {
+		if (!user) {
+			return fail(401);
+		}
+
+		const form = otpSchema.safeParse(Object.fromEntries(await request.formData()));
 		console.log(form.data);
-		if (!form.valid) {
+		if (!form.success) {
 			return fail(400, {
-				form
+				error: 'Invalid code'
 			});
 		}
+
+		const code =
+			form.data['code-0'] +
+			form.data['code-1'] +
+			form.data['code-2'] +
+			form.data['code-3'] +
+			form.data['code-4'] +
+			form.data['code-5'] +
+			form.data['code-6'] +
+			form.data['code-7'];
+		console.log(code);
+
+		try {
+			const validCode = await verifyVerificationCode(user, code);
+			if (!validCode) {
+				return fail(400, { error: 'Invalid code' });
+			}
+
+			await lucia.invalidateUserSessions(user.id);
+			await db
+				.updateTable('user')
+				.set({ email_verified: true })
+				.where('id', '=', user.id)
+				.execute();
+
+			const session = await lucia.createSession(user.id, {
+				ip: getClientAddress(),
+				user_agent: request.headers.get('user-agent'),
+				created_at: new Date()
+			});
+			const sessionCookie = lucia.createSessionCookie(session.id);
+			cookies.set(sessionCookie.name, sessionCookie.value, {
+				path: '.',
+				...sessionCookie.attributes
+			});
+		} catch (error) {
+			console.log('CATCHED EMAIL VERIFICATION ERROR:\n', error);
+			return fail(500, { error: 'Internal server error' });
+		}
+
+		return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);
 	}
 };

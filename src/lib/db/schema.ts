@@ -6,6 +6,7 @@ export const algorithmEnum = ['RS256', 'ES256'] as const;
 export type Database = {
 	user: UserTable;
 	session: SessionTable;
+	email_verification_code: EmailVerificationCodeTable;
 	account: AccountTable;
 	challenge: ChallengeTable;
 	credential: CredentialTable;
@@ -37,6 +38,15 @@ type SessionTable = {
 	created_at: CreatedAt;
 };
 export type Session = Selectable<SessionTable>;
+
+type EmailVerificationCodeTable = {
+	id: string;
+	code: string;
+	user_id: string;
+	email: string;
+	expires_at: ColumnType<Date, Date, never>;
+	created_at: CreatedAt;
+};
 
 type AccountTable = {
 	provider: (typeof authProviderEnum)[number];

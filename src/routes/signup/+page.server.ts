@@ -5,8 +5,8 @@ import { EmailPasswordRegistrationSchema } from '$lib/schemas';
 import { hash } from '@node-rs/argon2';
 import { generateIdFromEntropySize } from 'lucia';
 import { db } from '$lib/server/db';
-import { lucia } from '$lib/server/auth';
-import { clientEnv } from '$lib/env/client';
+import { generateEmailVerificationCode, lucia } from '$lib/server/auth';
+import { sendVerificationCode } from '$lib/server/email';
 
 export const load = async () => {
 	return {
@@ -52,6 +52,7 @@ export const actions = {
 						id: userId,
 						name: form.data.name,
 						email: form.data.email,
+						email_verified: false,
 						password_hash: passwordHash,
 						created_at: new Date(),
 						updated_at: new Date()
@@ -68,6 +69,9 @@ export const actions = {
 						updated_at: new Date()
 					})
 					.execute();
+
+				const verificationCode = await generateEmailVerificationCode(tx, userId, form.data.email);
+				await sendVerificationCode(form.data.email, verificationCode);
 			});
 
 			const session = await lucia.createSession(userId, {
@@ -85,6 +89,6 @@ export const actions = {
 			return message(form, 'Internal server error', { status: 500 });
 		}
 
-		return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);
+		return redirect(302, '/email-verification');
 	}
 };

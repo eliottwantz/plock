@@ -15,7 +15,7 @@
 		RegistrationResponseSchema
 	} from '$lib/schemas';
 	import { client } from '@passwordless-id/webauthn';
-	import { LucideTrash } from 'lucide-svelte';
+	import { LucideBadgeCheck, LucideTrash } from 'lucide-svelte';
 
 	let { data } = $props();
 	let error = $state<string | undefined>();
@@ -115,10 +115,34 @@
 		<div class="flex items-center gap-4">
 			<img src={data.user.picture} alt="profile" width="50" height="50" />
 			<div>
-				<p>{data.user.email}</p>
+				<div class="flex items-center gap-x-2">
+					<p>{data.user.email}</p>
+					<Tooltip.Root openDelay={200}>
+						<Tooltip.Trigger>
+							<LucideBadgeCheck
+								class="size-4 {data.user.email_verified ? 'text-green-500' : 'text-red-500'}"
+							/>
+						</Tooltip.Trigger>
+						<Tooltip.Content>
+							{#if data.user.email_verified}
+								<p>Email verified</p>
+							{:else}
+								<p>Email not verified</p>
+							{/if}
+						</Tooltip.Content>
+					</Tooltip.Root>
+				</div>
 				<small>Registered at: {new Date(data.user.created_at).toLocaleString()}</small>
 			</div>
 			<div class="flex-1"></div>
+			{#if !data.user.email_verified}
+				<a
+					href="/send-email-verification"
+					class={buttonVariants({ variant: 'outline', size: 'sm' })}
+				>
+					Send verification email
+				</a>
+			{/if}
 			<Tooltip.Root openDelay={200}>
 				<Tooltip.Trigger
 					onclick={() => {
