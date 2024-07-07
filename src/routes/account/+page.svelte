@@ -137,6 +137,7 @@
 			<div class="flex-1"></div>
 			{#if !data.user.email_verified}
 				<a
+					data-sveltekit-preload-data="off"
 					href="/send-email-verification"
 					class={buttonVariants({ variant: 'outline', size: 'sm' })}
 				>

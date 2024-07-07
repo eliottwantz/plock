@@ -19,7 +19,7 @@ export const load = async ({ locals: { user } }) => {
 		});
 	} catch (error) {
 		console.log('CATCHED EMAIL VERIFICATION ERROR:\n', error);
-		return redirect(302, '/login');
+		return redirect(302, '/account');
 	}
 
 	return redirect(302, '/email-verification');

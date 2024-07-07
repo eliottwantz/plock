@@ -34,6 +34,12 @@ export type ServerEnv = {
 	GITHUB_CLIENT_ID: string;
 	GITHUB_CLIENT_SECRET: string;
 	COOKIE_SUBDOMAIN: string;
+	EMAIL_FROM: string;
+	SMTP_USER: string;
+	SMTP_PASSWORD: string;
+	SMTP_HOST: string;
+	SMTP_PORT: string;
+	SMTP_SSL: string;
 } & (
 	| {
 			DB_TYPE: 'libsql';
