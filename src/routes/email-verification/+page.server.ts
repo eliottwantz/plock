@@ -1,8 +1,8 @@
-import { otpSchema } from './otpschema';
-import { fail, redirect } from '@sveltejs/kit';
+import { clientEnv } from '$lib/env/client';
+import { OtpSchema } from '$lib/schemas';
 import { lucia, verifyVerificationCode } from '$lib/server/auth';
 import { db } from '$lib/server/db';
-import { clientEnv } from '$lib/env/client';
+import { fail, redirect } from '@sveltejs/kit';
 
 export const actions = {
 	default: async ({ request, locals: { user }, cookies, getClientAddress }) => {
@@ -10,7 +10,7 @@ export const actions = {
 			return fail(401);
 		}
 
-		const form = otpSchema.safeParse(Object.fromEntries(await request.formData()));
+		const form = OtpSchema.safeParse(Object.fromEntries(await request.formData()));
 		console.log(form.data);
 		if (!form.success) {
 			return fail(400, {

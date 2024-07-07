@@ -1,11 +1,8 @@
 <script lang="ts">
+	import { enhance } from '$app/forms';
 	import EmailVerificationIcon from '$lib/components/icons/EmailVerificationIcon.svelte';
 	import OtpInput from '$lib/components/OtpInput/OtpInput.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
-	import { superForm } from 'sveltekit-superforms';
-	import { zodClient } from 'sveltekit-superforms/adapters';
-	import { otpSchema } from './otpschema';
-	import { enhance } from '$app/forms';
 
 	let { form } = $props();
 	let formEl: HTMLFormElement | undefined = $state();
