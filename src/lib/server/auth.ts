@@ -1,12 +1,11 @@
+import { authProviderEnum, type Database, type User as DBUser, type Session } from '$lib/db/schema';
 import { serverEnv } from '$lib/env/server';
-import { authProviderEnum, type Database, type Session, type User as DBUser } from '$lib/db/schema';
-import { db } from '$lib/server/db';
+import { adapter, db } from '$lib/server/db';
 import { GitHub, Google } from 'arctic';
-import { Lucia, generateId, generateIdFromEntropySize, type Cookie, type User } from 'lucia';
-import { adapter } from '$lib/server/db';
-import { generateRandomString, alphabet, sha256 } from 'oslo/crypto';
-import { createDate, isWithinExpirationDate, TimeSpan } from 'oslo';
 import type { Transaction } from 'kysely';
+import { generateId, generateIdFromEntropySize, Lucia, type Cookie, type User } from 'lucia';
+import { createDate, isWithinExpirationDate, TimeSpan } from 'oslo';
+import { alphabet, generateRandomString, sha256 } from 'oslo/crypto';
 import { encodeHex } from 'oslo/encoding';
 
 export const lucia = new Lucia(adapter, {
@@ -17,9 +16,14 @@ export const lucia = new Lucia(adapter, {
 		}
 	},
 	getUserAttributes(databaseUserAttributes) {
-		// const { password_hash, ...user } = databaseUserAttributes;
-		// return user;
-		return databaseUserAttributes;
+		return {
+			name: databaseUserAttributes.name,
+			email: databaseUserAttributes.email,
+			email_verified: databaseUserAttributes.email_verified,
+			picture: databaseUserAttributes.picture,
+			created_at: databaseUserAttributes.created_at,
+			updated_at: databaseUserAttributes.updated_at
+		};
 	},
 	getSessionAttributes(databaseSessionAttributes) {
 		return databaseSessionAttributes;
