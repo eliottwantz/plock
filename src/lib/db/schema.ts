@@ -22,6 +22,7 @@ type UserTable = {
 	id: string;
 	name: string;
 	email: string;
+	email_verified: boolean;
 	password_hash: string | null;
 	picture: string | null;
 } & Timestamps;

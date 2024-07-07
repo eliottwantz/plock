@@ -1,5 +1,5 @@
 import { createId } from '@paralleldrive/cuid2';
-import { pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, primaryKey, text, timestamp, uniqueIndex } from 'drizzle-orm/pg-core';
 import { createInsertSchema, createSelectSchema } from 'drizzle-zod';
 import type { z } from 'zod';
 
@@ -13,6 +13,7 @@ export const userTable = pgTable('user', {
 	id: text('id').primaryKey().$default(createId),
 	name: text('name').notNull(),
 	email: text('email').notNull().unique(),
+	emailVerified: boolean('email_verified').notNull().default(false),
 	passwordHash: text('password_hash'),
 	picture: text('picture'),
 	createdAt,

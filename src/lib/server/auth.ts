@@ -74,7 +74,6 @@ export const handleOauthLogin = async (
 
 		let userId: string;
 		if (!existingUser) {
-			// userId = createId();
 			userId = generateIdFromEntropySize(10);
 			await db.transaction().execute(async (tx) => {
 				await tx
@@ -83,6 +82,7 @@ export const handleOauthLogin = async (
 						id: userId,
 						name: info.name,
 						email: info.email,
+						email_verified: true,
 						picture: info.picture,
 						created_at: new Date(),
 						updated_at: new Date()
