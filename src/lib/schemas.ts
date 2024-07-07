@@ -28,3 +28,17 @@ export const EmailPasswordRegistrationSchema = z.object({
 	name: z.string().min(1, { message: 'Name is required' }),
 	password: z.string().min(1, { message: 'Password is required' }).max(128)
 });
+
+export const EmailPasswordResetSchema = z.object({
+	email: z.string().email({ message: 'Must be a valid email' })
+});
+
+export const PasswordResetSchema = z
+	.object({
+		password: z.string().min(1, { message: 'Password is required' }).max(128),
+		confirmPassword: z.string().min(1, { message: 'Password is required' }).max(128)
+	})
+	.refine((data) => data.password === data.confirmPassword, {
+		message: 'Passwords do not match',
+		path: ['confirmPassword']
+	});

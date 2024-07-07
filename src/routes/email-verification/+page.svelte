@@ -29,7 +29,7 @@
 	</p>
 
 	{#if form?.error}
-		<p class="my-4 text-red-500">{form.error}</p>
+		<p class="my-4 text-destructive">{form.error}</p>
 	{/if}
 
 	<form bind:this={formEl} method="post" use:enhance class="flex flex-col items-center gap-y-4">

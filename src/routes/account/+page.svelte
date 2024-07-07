@@ -120,7 +120,7 @@
 					<Tooltip.Root openDelay={200}>
 						<Tooltip.Trigger>
 							<LucideBadgeCheck
-								class="size-4 {data.user.email_verified ? 'text-green-500' : 'text-red-500'}"
+								class="size-4 {data.user.email_verified ? 'text-green-500' : 'text-destructive'}"
 							/>
 						</Tooltip.Trigger>
 						<Tooltip.Content>
@@ -144,6 +144,7 @@
 					Send verification email
 				</a>
 			{/if}
+			<a class={buttonVariants({ variant: 'outline' })} href="/logout">Logout</a>
 			<Tooltip.Root openDelay={200}>
 				<Tooltip.Trigger
 					onclick={() => {
@@ -229,7 +230,7 @@
 							class="mb-4 flex flex-col gap-y-2"
 						>
 							{#if modalError}
-								<p class=" text-red-500">{modalError}</p>
+								<p class=" text-destructive">{modalError}</p>
 							{/if}
 							<div class="flex flex-col gap-y-3">
 								<Label for="passkeyname">Give a name to differentiate this passkey</Label>
@@ -314,6 +315,6 @@
 	</section>
 
 	{#if error}
-		<p class="text-red-500">{error}</p>
+		<p class="text-destructive">{error}</p>
 	{/if}
 </div>

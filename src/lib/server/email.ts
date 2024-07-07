@@ -18,3 +18,13 @@ export const sendVerificationCode = async (email: string, code: string) => {
 		subject: 'Your email verification code for Plock'
 	});
 };
+
+export const sendPasswordResetToken = async (email: string, verificationLink: string) => {
+	console.log('sendPasswordResetToken', email, verificationLink);
+	await client.sendAsync({
+		text: `Your password reset link is ${verificationLink}`,
+		from: serverEnv.EMAIL_FROM,
+		to: email,
+		subject: 'Your password reset link for Plock'
+	});
+};

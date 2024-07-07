@@ -4,9 +4,10 @@ import { db } from '$lib/server/db';
 import { GitHub, Google } from 'arctic';
 import { Lucia, generateId, generateIdFromEntropySize, type Cookie, type User } from 'lucia';
 import { adapter } from '$lib/server/db';
-import { generateRandomString, alphabet } from 'oslo/crypto';
+import { generateRandomString, alphabet, sha256 } from 'oslo/crypto';
 import { createDate, isWithinExpirationDate, TimeSpan } from 'oslo';
 import type { Transaction } from 'kysely';
+import { encodeHex } from 'oslo/encoding';
 
 export const lucia = new Lucia(adapter, {
 	sessionCookie: {
@@ -170,4 +171,21 @@ export async function verifyVerificationCode(user: User, code: string): Promise<
 		return false;
 	}
 	return true;
+}
+
+export async function createPasswordResetToken(userId: string): Promise<string> {
+	await db.deleteFrom('password_reset_token').where('user_id', '=', userId).execute();
+	const tokenId = generateIdFromEntropySize(25); // 40 character
+	const tokenHash = encodeHex(await sha256(new TextEncoder().encode(tokenId)));
+	await db
+		.insertInto('password_reset_token')
+		.values({
+			id: generateId(11),
+			token_hash: tokenHash,
+			user_id: userId,
+			expires_at: createDate(new TimeSpan(2, 'h')),
+			created_at: new Date()
+		})
+		.execute();
+	return tokenId;
 }

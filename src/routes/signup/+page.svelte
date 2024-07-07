@@ -90,7 +90,7 @@
 		Enter your name, email and password below create your account
 	</small>
 	{#if error}
-		<p class="text-red-500">{error}</p>
+		<p class="text-destructive">{error}</p>
 	{/if}
 	<div
 		data-sveltekit-preload-data="false"

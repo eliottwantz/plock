@@ -1,5 +1,5 @@
 <script lang="ts">
-	import { Button } from '$lib/components/ui/button';
+	import { Button, buttonVariants } from '$lib/components/ui/button';
 	import * as Form from '$lib/components/ui/form';
 	import { Input } from '$lib/components/ui/input';
 	import { clientEnv } from '$lib/env/client';
@@ -90,7 +90,7 @@
 		Enter your email and password below sign in to your account
 	</small>
 	{#if error}
-		<p class="text-red-500">{error}</p>
+		<p class="text-destructive">{error}</p>
 	{/if}
 	<div
 		data-sveltekit-preload-data="false"
@@ -123,6 +123,9 @@
 				<Form.FieldErrors />
 			</Form.Field>
 			<Form.Button class="mt-2">Sign In</Form.Button>
+			<a href="/reset-password" class="{buttonVariants({ variant: 'outline' })} my-2"
+				>Reset password</a
+			>
 			<small data-sveltekit-preload-data="hover">
 				No account?
 				<a href="/signup" class="underline underline-offset-2">Sign up</a>

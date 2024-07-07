@@ -7,6 +7,7 @@ export type Database = {
 	user: UserTable;
 	session: SessionTable;
 	email_verification_code: EmailVerificationCodeTable;
+	password_reset_token: PasswordResetTokenTable;
 	account: AccountTable;
 	challenge: ChallengeTable;
 	credential: CredentialTable;
@@ -44,6 +45,14 @@ type EmailVerificationCodeTable = {
 	code: string;
 	user_id: string;
 	email: string;
+	expires_at: ColumnType<Date, Date, never>;
+	created_at: CreatedAt;
+};
+
+type PasswordResetTokenTable = {
+	id: string;
+	token_hash: string;
+	user_id: string;
 	expires_at: ColumnType<Date, Date, never>;
 	created_at: CreatedAt;
 };

@@ -101,3 +101,18 @@ export const emailVerificationCodeTable = pgTable('email_verification_code', {
 });
 export type EmailVerificationCode = typeof emailVerificationCodeTable.$inferSelect;
 export const emailVerificationCodeSchema = createSelectSchema(emailVerificationCodeTable);
+
+export const passwordResetTable = pgTable('password_reset_token', {
+	id: text('id').primaryKey().$default(createId),
+	tokenHash: text('token_hash').notNull().unique(),
+	userId: text('user_id')
+		.notNull()
+		.references(() => userTable.id, { onDelete: 'cascade' }),
+	expiresAt: timestamp('expires_at', {
+		withTimezone: true,
+		mode: 'date'
+	}).notNull(),
+	createdAt
+});
+export type PasswordReset = typeof passwordResetTable.$inferSelect;
+export const passwordResetSchema = createSelectSchema(passwordResetTable);
