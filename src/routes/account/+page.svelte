@@ -144,7 +144,11 @@
 					Send verification email
 				</a>
 			{/if}
-			<a class={buttonVariants({ variant: 'outline' })} href="/logout">Logout</a>
+			<a
+				data-sveltekit-preload-data="off"
+				class={buttonVariants({ variant: 'outline' })}
+				href="/logout">Logout</a
+			>
 			<Tooltip.Root openDelay={200}>
 				<Tooltip.Trigger
 					onclick={() => {
