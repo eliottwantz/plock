@@ -5,13 +5,15 @@
 		value: string;
 		codes: string[];
 		inputs: (null | HTMLInputElement)[];
+		disabled: boolean;
 	};
 	let {
 		input = $bindable(),
 		index,
 		value = $bindable(),
 		codes = $bindable(),
-		inputs
+		inputs,
+		disabled
 	}: Props = $props();
 	let num = true;
 	let key: string;
@@ -103,4 +105,5 @@
 	oninput={changeHandler}
 	onpaste={pasteHandler}
 	{value}
+	{disabled}
 />

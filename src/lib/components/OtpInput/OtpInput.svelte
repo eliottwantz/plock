@@ -1,11 +1,12 @@
 <script lang="ts">
-	import OtpItem from './OtpInputBox.svelte';
 	import { LucideDot } from 'lucide-svelte';
+	import OtpItem from './OtpInputBox.svelte';
 
 	type Props = {
 		submitCode: () => void;
+		disabled: boolean;
 	};
-	let { submitCode }: Props = $props();
+	let { submitCode, disabled }: Props = $props();
 
 	const numOfInputs: number = 8;
 	let value = $state('');
@@ -34,7 +35,14 @@
 <div class="flex items-center gap-2">
 	<div class="flex items-center">
 		{#each Array(numOfInputs / 2) as _, i (i)}
-			<OtpItem bind:input={inputs[i]} bind:value={codes[i]} index={i} bind:codes {inputs} />
+			<OtpItem
+				{disabled}
+				bind:input={inputs[i]}
+				bind:value={codes[i]}
+				index={i}
+				bind:codes
+				{inputs}
+			/>
 		{/each}
 	</div>
 	<span>
@@ -43,7 +51,14 @@
 	<div class="flex items-center">
 		{#each Array(numOfInputs / 2) as _, i (i)}
 			{@const index = i + numOfInputs / 2}
-			<OtpItem bind:input={inputs[index]} bind:value={codes[index]} {index} bind:codes {inputs} />
+			<OtpItem
+				{disabled}
+				bind:input={inputs[index]}
+				bind:value={codes[index]}
+				{index}
+				bind:codes
+				{inputs}
+			/>
 		{/each}
 	</div>
 </div>

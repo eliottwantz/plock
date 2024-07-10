@@ -3,9 +3,11 @@
 	import EmailVerificationIcon from '$lib/components/icons/EmailVerificationIcon.svelte';
 	import OtpInput from '$lib/components/OtpInput/OtpInput.svelte';
 	import { Button, buttonVariants } from '$lib/components/ui/button';
+	import { LucideLoaderCircle } from 'lucide-svelte';
 
 	let { form } = $props();
 	let formEl: HTMLFormElement | undefined = $state();
+	let loading = $state(false);
 
 	const submitCode = () => {
 		if (!formEl) return;
@@ -29,9 +31,32 @@
 		<p class="my-4 text-destructive">{form.error}</p>
 	{/if}
 
-	<form bind:this={formEl} method="post" use:enhance class="flex flex-col items-center gap-y-4">
-		<OtpInput {submitCode} />
-		<Button type="submit" class="w-full">Verify & Continue</Button>
+	<form
+		bind:this={formEl}
+		method="post"
+		use:enhance={() => {
+			loading = true;
+
+			return async ({ update }) => {
+				loading = false;
+				await update({ reset: true });
+			};
+		}}
+		class="flex flex-col items-center gap-y-4"
+	>
+		<OtpInput {submitCode} disabled={loading} />
+		<div>
+			{#if loading}
+				<div class="flex items-center gap-2">
+					<div class="flex items-center">
+						<LucideLoaderCircle class="size-5 animate-spin" />
+					</div>
+					<p class="text-pretty text-muted-foreground">Verifying...</p>
+				</div>
+			{:else}
+				<Button type="submit" class="w-full">Verify & Continue</Button>
+			{/if}
+		</div>
 	</form>
 
 	<p data-sveltekit-preload-data="off" class="text-pretty text-muted-foreground">
