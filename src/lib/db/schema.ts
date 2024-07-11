@@ -26,6 +26,8 @@ type UserTable = {
 	email: string;
 	email_verified: boolean;
 	password_hash: string | null;
+	two_factor_setup_done: boolean;
+	two_factor_secret: string | null;
 	picture: string | null;
 } & Timestamps;
 export type User = Selectable<UserTable>;

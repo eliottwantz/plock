@@ -97,6 +97,7 @@
 <input
 	name="code-{index}"
 	required
+	autocomplete="off"
 	class="h-10 w-10 border border-r-0 border-foreground/10 text-center first:rounded-l-lg last:rounded-r-lg last:border-r"
 	bind:this={input}
 	onkeydown={keyDownHandler}

@@ -6,13 +6,7 @@
 	import { LucideLoaderCircle } from 'lucide-svelte';
 
 	let { form } = $props();
-	let formEl: HTMLFormElement | undefined = $state();
 	let loading = $state(false);
-
-	const submitCode = () => {
-		if (!formEl) return;
-		formEl.requestSubmit();
-	};
 
 	$effect(() => {
 		console.log('form error', form?.error);
@@ -32,7 +26,6 @@
 	{/if}
 
 	<form
-		bind:this={formEl}
 		method="post"
 		use:enhance={() => {
 			loading = true;
@@ -44,7 +37,7 @@
 		}}
 		class="flex flex-col items-center gap-y-4"
 	>
-		<OtpInput {submitCode} disabled={loading} />
+		<OtpInput digits={8} disabled={loading} />
 		<div>
 			{#if loading}
 				<div class="flex items-center gap-2">

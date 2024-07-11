@@ -1,5 +1,6 @@
 import { clientEnv } from '$lib/env/client';
-import { OtpSchema } from '$lib/schemas';
+import { serverEnv } from '$lib/env/server';
+import { EmailVerifCodeSchema } from '$lib/schemas';
 import { lucia, verifyVerificationCode } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { fail, redirect } from '@sveltejs/kit';
@@ -10,7 +11,7 @@ export const actions = {
 			return fail(401);
 		}
 
-		const form = OtpSchema.safeParse(Object.fromEntries(await request.formData()));
+		const form = EmailVerifCodeSchema.safeParse(Object.fromEntries(await request.formData()));
 		console.log(form.data);
 		if (!form.success) {
 			return fail(400, {
@@ -41,20 +42,24 @@ export const actions = {
 				.set({ email_verified: true })
 				.where('id', '=', user.id)
 				.execute();
-
-			const session = await lucia.createSession(user.id, {
-				ip: getClientAddress(),
-				user_agent: request.headers.get('user-agent'),
-				created_at: new Date()
-			});
-			const sessionCookie = lucia.createSessionCookie(session.id);
-			cookies.set(sessionCookie.name, sessionCookie.value, {
-				path: '.',
-				...sessionCookie.attributes
-			});
 		} catch (error) {
 			console.log('CATCHED EMAIL VERIFICATION ERROR:\n', error);
 			return fail(500, { error: 'Internal server error' });
+		}
+
+		const session = await lucia.createSession(user.id, {
+			ip: getClientAddress(),
+			user_agent: request.headers.get('user-agent'),
+			created_at: new Date()
+		});
+		const sessionCookie = lucia.createSessionCookie(session.id);
+		cookies.set(sessionCookie.name, sessionCookie.value, {
+			path: '.',
+			...sessionCookie.attributes
+		});
+
+		if (serverEnv.ENFORCE_TWO_FACTOR === 'true' || user.two_factor_setup_done) {
+			return redirect(302, '/auth/totp');
 		}
 
 		return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);

@@ -1,11 +1,13 @@
-import { message, superValidate } from 'sveltekit-superforms';
-import { zod } from 'sveltekit-superforms/adapters';
-import { fail, redirect } from '@sveltejs/kit';
+import type { User } from '$lib/db/schema';
+import { clientEnv } from '$lib/env/client';
+import { serverEnv } from '$lib/env/server';
 import { EmailPasswordLoginSchema } from '$lib/schemas';
 import { lucia } from '$lib/server/auth';
 import { db } from '$lib/server/db';
 import { verify } from '@node-rs/argon2';
-import { clientEnv } from '$lib/env/client';
+import { fail, redirect } from '@sveltejs/kit';
+import { message, superValidate } from 'sveltekit-superforms';
+import { zod } from 'sveltekit-superforms/adapters';
 
 export const load = async () => {
 	return {
@@ -24,8 +26,9 @@ export const actions = {
 			});
 		}
 
+		let user: User | undefined;
 		try {
-			const user = await db
+			user = await db
 				.selectFrom('user')
 				.where('email', '=', form.data.email)
 				.selectAll()
@@ -80,6 +83,10 @@ export const actions = {
 		} catch (error) {
 			console.log('CATCHED LOGIN ERROR:\n', error);
 			return message(form, 'Internal server error', { status: 500 });
+		}
+
+		if (serverEnv.ENFORCE_TWO_FACTOR === 'true' || user.two_factor_setup_done) {
+			return redirect(302, '/auth/totp');
 		}
 
 		return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);

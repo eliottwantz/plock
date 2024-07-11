@@ -3,12 +3,12 @@
 	import OtpItem from './OtpInputBox.svelte';
 
 	type Props = {
-		submitCode: () => void;
 		disabled: boolean;
+		digits: number;
 	};
-	let { submitCode, disabled }: Props = $props();
+	let { disabled, digits }: Props = $props();
 
-	const numOfInputs: number = 8;
+	const numOfInputs: number = digits;
 	let value = $state('');
 
 	let codes = $state([
@@ -25,10 +25,6 @@
 			...value.slice(0, numOfInputs).split(''),
 			...Array(numOfInputs <= value.length ? 0 : numOfInputs - value.length).fill('')
 		];
-	});
-
-	$effect(() => {
-		if (fullCode.length === numOfInputs) submitCode();
 	});
 </script>
 

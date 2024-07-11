@@ -40,6 +40,7 @@ export type ServerEnv = {
 	SMTP_HOST: string;
 	SMTP_PORT: string;
 	SMTP_SSL: string;
+	ENFORCE_TWO_FACTOR: string;
 } & (
 	| {
 			DB_TYPE: 'libsql';

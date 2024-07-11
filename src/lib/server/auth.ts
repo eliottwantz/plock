@@ -22,7 +22,8 @@ export const lucia = new Lucia(adapter, {
 			email_verified: databaseUserAttributes.email_verified,
 			picture: databaseUserAttributes.picture,
 			created_at: databaseUserAttributes.created_at,
-			updated_at: databaseUserAttributes.updated_at
+			updated_at: databaseUserAttributes.updated_at,
+			two_factor_setup_done: databaseUserAttributes.two_factor_setup_done
 		};
 	},
 	getSessionAttributes(databaseSessionAttributes) {
@@ -91,6 +92,7 @@ export const handleOauthLogin = async (
 						name: info.name,
 						email: info.email,
 						email_verified: true,
+						two_factor_setup_done: false,
 						picture: info.picture,
 						created_at: new Date(),
 						updated_at: new Date()

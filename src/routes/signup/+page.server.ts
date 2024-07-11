@@ -1,12 +1,12 @@
+import { EmailPasswordRegistrationSchema } from '$lib/schemas';
+import { generateEmailVerificationCode, lucia } from '$lib/server/auth';
+import { db } from '$lib/server/db';
+import { sendVerificationCode } from '$lib/server/email';
+import { hash } from '@node-rs/argon2';
+import { fail, redirect } from '@sveltejs/kit';
+import { generateIdFromEntropySize } from 'lucia';
 import { message, superValidate } from 'sveltekit-superforms';
 import { zod } from 'sveltekit-superforms/adapters';
-import { fail, redirect } from '@sveltejs/kit';
-import { EmailPasswordRegistrationSchema } from '$lib/schemas';
-import { hash } from '@node-rs/argon2';
-import { generateIdFromEntropySize } from 'lucia';
-import { db } from '$lib/server/db';
-import { generateEmailVerificationCode, lucia } from '$lib/server/auth';
-import { sendVerificationCode } from '$lib/server/email';
 
 export const load = async () => {
 	return {
@@ -45,6 +45,7 @@ export const actions = {
 				parallelism: 1
 			});
 			const userId = generateIdFromEntropySize(10);
+
 			await db.transaction().execute(async (tx) => {
 				await tx
 					.insertInto('user')
@@ -54,6 +55,8 @@ export const actions = {
 						email: form.data.email,
 						email_verified: false,
 						password_hash: passwordHash,
+						two_factor_setup_done: false,
+						two_factor_secret: null,
 						created_at: new Date(),
 						updated_at: new Date()
 					})

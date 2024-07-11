@@ -43,7 +43,7 @@ export const PasswordResetSchema = z
 		path: ['confirmPassword']
 	});
 
-export const OtpSchema = z.object({
+export const EmailVerifCodeSchema = z.object({
 	'code-0': z.string().regex(/^\d{1}$/),
 	'code-1': z.string().regex(/^\d{1}$/),
 	'code-2': z.string().regex(/^\d{1}$/),
@@ -52,4 +52,13 @@ export const OtpSchema = z.object({
 	'code-5': z.string().regex(/^\d{1}$/),
 	'code-6': z.string().regex(/^\d{1}$/),
 	'code-7': z.string().regex(/^\d{1}$/)
+});
+
+export const TOTPSchema = z.object({
+	'code-0': z.string().regex(/^\d{1}$/),
+	'code-1': z.string().regex(/^\d{1}$/),
+	'code-2': z.string().regex(/^\d{1}$/),
+	'code-3': z.string().regex(/^\d{1}$/),
+	'code-4': z.string().regex(/^\d{1}$/),
+	'code-5': z.string().regex(/^\d{1}$/)
 });
