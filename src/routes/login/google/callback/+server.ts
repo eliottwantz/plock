@@ -1,4 +1,5 @@
 import { clientEnv } from '$lib/env/client';
+import { serverEnv } from '$lib/env/server';
 import { google, handleOauthLogin } from '$lib/server/auth';
 import { redirect } from '@sveltejs/kit';
 import { OAuth2RequestError } from 'arctic';
@@ -32,6 +33,7 @@ export const GET = async (event) => {
 		return redirect(302, '/auth/error?reason=missing_code_verifier');
 	}
 
+	let two_factor_setup_done = false;
 	try {
 		const tokens = await google.validateAuthorizationCode(code, codeVerifier.toString());
 		console.log('Got tokens:', tokens);
@@ -43,7 +45,7 @@ export const GET = async (event) => {
 		const googleUser: GoogleUserResult = await googleUserResponse.json();
 		console.log('GOT GOOGLE USER', googleUser);
 
-		const sessionCookie = await handleOauthLogin('google', {
+		const { cookie, twoFactorSetupDone } = await handleOauthLogin('google', {
 			providerId: googleUser.sub,
 			email: googleUser.email,
 			name: googleUser.name,
@@ -51,9 +53,10 @@ export const GET = async (event) => {
 			ip: event.getClientAddress(),
 			userAgent: event.request.headers.get('user-agent')
 		});
-		event.cookies.set(sessionCookie.name, sessionCookie.value, {
+		two_factor_setup_done = twoFactorSetupDone;
+		event.cookies.set(cookie.name, cookie.value, {
 			path: '.',
-			...sessionCookie.attributes
+			...cookie.attributes
 		});
 	} catch (e) {
 		if (e instanceof OAuth2RequestError) {
@@ -63,6 +66,10 @@ export const GET = async (event) => {
 			console.log('Unknown error:\n', e);
 			return redirect(302, '/auth/error');
 		}
+	}
+
+	if (serverEnv.ENFORCE_TWO_FACTOR === 'true' || two_factor_setup_done) {
+		return redirect(302, '/auth/totp');
 	}
 
 	return redirect(302, clientEnv.PUBLIC_CALLBACK_URL);

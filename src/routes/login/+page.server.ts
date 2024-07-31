@@ -26,12 +26,12 @@ export const actions = {
 			});
 		}
 
-		let user: User | undefined;
+		let user: Pick<User, 'id' | 'password_hash' | 'two_factor_setup_done'> | undefined;
 		try {
 			user = await db
 				.selectFrom('user')
 				.where('email', '=', form.data.email)
-				.selectAll()
+				.select(['id', 'password_hash', 'two_factor_setup_done'])
 				.executeTakeFirst();
 
 			if (!user) {

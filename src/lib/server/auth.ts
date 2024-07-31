@@ -59,12 +59,13 @@ export type OauthLoginInfo = {
 export const handleOauthLogin = async (
 	provider: (typeof authProviderEnum)[number],
 	info: OauthLoginInfo
-): Promise<Cookie> => {
+): Promise<{ cookie: Cookie; twoFactorSetupDone: boolean }> => {
 	const existingAccount = await db
 		.selectFrom('account')
 		.where('provider', '=', provider)
 		.where('provider_user_id', '=', info.providerId)
-		.selectAll()
+		.innerJoin('user', 'user.id', 'account.user_id')
+		.select(['user_id', 'user.two_factor_setup_done'])
 		.executeTakeFirst();
 	if (existingAccount) {
 		const session = await lucia.createSession(existingAccount.user_id, {
@@ -73,7 +74,7 @@ export const handleOauthLogin = async (
 			created_at: new Date()
 		});
 		const sessionCookie = lucia.createSessionCookie(session.id);
-		return sessionCookie;
+		return { cookie: sessionCookie, twoFactorSetupDone: existingAccount.two_factor_setup_done };
 	} else {
 		const existingUser = await db
 			.selectFrom('user')
@@ -130,7 +131,10 @@ export const handleOauthLogin = async (
 			created_at: new Date()
 		});
 		const sessionCookie = lucia.createSessionCookie(session.id);
-		return sessionCookie;
+		return {
+			cookie: sessionCookie,
+			twoFactorSetupDone: existingUser?.two_factor_setup_done || false
+		};
 	}
 };
 
